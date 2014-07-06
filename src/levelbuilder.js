@@ -7,7 +7,7 @@
  */
 
 // This defines the grid size and the size of each tile
-var tileSize = {w: 96, h: 96},
+var tileSize = {w: (90 * worldScale), h: (90 * worldScale)},
 	solidBlockList = [],
 	solidBlockListIndex = 0,
 	solidRampList = [],
@@ -40,13 +40,13 @@ function initLevel(levelNum) {
 				// ------ Player_Character ------ //
 				case 2:
 					PC = Crafty.e("PC")
-						.attr({ x: tileX, y: tileY - tileSize.h*2, z: 100 });
+						.attr({ x: tileX, y: tileY - tileSize.h*2 });
 					PC.resetPosCoords = { x: tileX, y: tileY - tileSize.h*2 };
 					break;
 				// ------ Block_Door ------ //
 				case 3:
 					entitiesList[entitiesListIndex] = Crafty.e("BlockDoor")
-						.attr({ x: tileX, y: (tileY+tileSize.h) - 180 });
+						.attr({ x: tileX, y: (tileY+tileSize.h) - (180 * worldScale) });
 						entitiesList[entitiesListIndex].hitBox.x = entitiesList[entitiesListIndex].x+5;
 						entitiesList[entitiesListIndex].hitBox.y = (entitiesList[entitiesListIndex].y+entitiesList[entitiesListIndex].h)-10;
 						entitiesListIndex++;
@@ -54,7 +54,7 @@ function initLevel(levelNum) {
 				// ------ Hazard_Floor ------ //
 				case 4:
 					Crafty.e("Hazard_Block")
-						.attr({ x: tileX, y: tileY + 20, w: tileSize.w, h: tileSize.h-20 });
+						.attr({ x: tileX, y: (tileY + (20 * worldScale)), w: tileSize.w, h: (tileSize.h - (20 * worldScale)) });
 					break;
 				// ------ SolidRamp ------ //
 				case 5:
@@ -63,7 +63,7 @@ function initLevel(levelNum) {
 				// ------ Checkpoint ------ //
 				case 6:
 					entitiesList[entitiesListIndex] = Crafty.e("Checkpoint")
-						.attr({ x: tileX, y: (tileY+tileSize.h) - 200 });
+						.attr({ x: tileX, y: (tileY+tileSize.h) - (200 * worldScale) });
 						entitiesList[entitiesListIndex].hitBox.x = entitiesList[entitiesListIndex].x+5;
 						entitiesList[entitiesListIndex].hitBox.y = (entitiesList[entitiesListIndex].y+entitiesList[entitiesListIndex].h)-10;
 						entitiesListIndex++;
@@ -71,8 +71,8 @@ function initLevel(levelNum) {
 				// ------ Spike_Ball ------ //
 				case 7:
 					entitiesList[entitiesListIndex] = Crafty.e("Spike_Ball")
-						.attr({ x: tileX + 13, y: tileY + 13 });
-						entitiesList[entitiesListIndex].resetPosCoords = { x: tileX + 13, y: tileY + 13 };
+						.attr({ x: tileX + (13 * worldScale), y: tileY + (13 * worldScale) });
+						entitiesList[entitiesListIndex].resetPosCoords = { x: tileX + (13 * worldScale), y: tileY + (13 * worldScale) };
 						entitiesListIndex++;
 					break;
 				// ------ JumpPad ------ //

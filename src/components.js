@@ -370,7 +370,7 @@ Crafty.c("PC_Sprite", {
 		this.offset = { x: 0, y: 0 };
 
 		this.requires("Actor, SpriteAnimation, spr_PC")
-			.attr({w: 75, h: 100, z: 9001});
+			.attr({w: (70 * worldScale), h: (95 * worldScale), z: 9001});
 
 		// ------ Define_Animations ------ //
 		this.reel("PC_Idle00r", 2000, 0, 0, 47)		//Idle, facing right
@@ -409,21 +409,22 @@ Crafty.c("PC_Sprite", {
 // ------------- Player_Character ------------- //
 Crafty.c("PC", {
 	init: function() {
-		this.movSpeed = 0.1;
-		this.maxVel = 10;
-		this.jumpImpulse = -13;
-		this.velSlow = 2;		//How quickly velocity decreases when collidedD, higher values are slower
-		this.velSlowAir = 20; 	//How quickly velocity decreases when !collidedD, higher values are slower
+		this.movSpeed = (40 * worldScale);
+		this.maxVel = (10 * worldScale);
+		this.jumpImpulse = (-12.5 * worldScale);
+		this.velSlow = (2 * worldScale);		//How quickly velocity decreases when collidedD, higher values are slower
+		this.velSlowAir = (20 * worldScale); 	//How quickly velocity decreases when !collidedD, higher values are slower
 		this.curVel = [0, 0];
 		this.broadphasebox = {x: 0, y: 0, w: 0, h: 0 };
 		this.lastDir = "right";
 		this.resetPosCoords = { x: 0, y: 0 };
 		this.isDead = false;
+		this.canJump = true;
 
 		var collidedD = false;
 
 		this.requires("Actor, collisionDetection, Keyboard, Delay, Entity")
-			.attr({w: 40, h: 90});
+			.attr({w: (35 * worldScale), h: (85 * worldScale)});
 
 		this.spriteObj = Crafty.e("PC_Sprite");
 		this.spriteObj.movParent = this;
@@ -467,6 +468,8 @@ Crafty.c("PC", {
 					this.jump(this.jumpImpulse);
 				} else if (e.key == Crafty.keys.Q) {
 					this.resetPos();
+				} else if (e.key == Crafty.keys.S) {
+					this.canJump = false;
 				}
 			}
 		});
@@ -476,6 +479,8 @@ Crafty.c("PC", {
 					if (this.curVel[1] < 0) {
 						this.curVel[1] = 0; // Resets y velocity, so max jump height can be controlled
 					}
+				} else if (e.key == Crafty.keys.S) {
+					this.canJump = true;
 				}
 			}
 		});
@@ -485,25 +490,25 @@ Crafty.c("PC", {
 			if (!this.isDead) {
 				if (this.isDown("A")) { //Moving left
 					if (this.curVel[0] > -this.maxVel) {
-						this.curVel[0] -= this.movSpeed * frameData.dt;
+						this.curVel[0] -= this.movSpeed / frameData.dt;
 					}
 				} else if (this.isDown("D")) { //Moving right
 					if (this.curVel[0] < this.maxVel) {
-						this.curVel[0] += this.movSpeed * frameData.dt;
+						this.curVel[0] += this.movSpeed / frameData.dt;
 					}
 				}
 
 				// ----- velocity_x ----- //
 				if (this.curVel[0] < -0.1) {
-					this.curVel[0] += this.movSpeed/2 * frameData.dt;
+					this.curVel[0] += (this.movSpeed/2) / frameData.dt;
 				} else if (this.curVel[0] > 0.1) {
-					this.curVel[0] -= this.movSpeed/2 * frameData.dt;
+					this.curVel[0] -= (this.movSpeed/2) / frameData.dt;
 				} else {
 					this.curVel[0] = 0;
 				}
 				
 				// ----- velocity_y ----- //
-				this.curVel[1] += worldGravity * frameData.dt/2; //Gravity
+				this.curVel[1] += (worldGravity * worldScale) * frameData.dt/2; //Gravity
 
 				// ---- Collision_Detection ---- //
 				this.updateBroadphasebox();
@@ -602,7 +607,7 @@ Crafty.c("PC", {
 			}, 900, 0);
 			// Delay the deathEmitter
 			this.delay(function() {
-				this.deathEmitter.emitParticles( 40, 60, emitVel = {direction: "randomOmni", x: 4, y: -7, strength: null}, "decelerate", "noCollide", true, 8000, 1, 14, null, "spr_PC_Parachute");
+				this.deathEmitter.emitParticles( (40 * worldScale), (60 * worldScale), emitVel = {direction: "randomOmni", x: 4, y: -7, strength: null}, "decelerate", "noCollide", true, 8000, 1, 14, null, "spr_PC_Parachute");
 			}, 650, 0);
 			// Delay resetPos
 			this.delay(function() {
@@ -808,7 +813,7 @@ Crafty.c("BlockDoor", {
 	init: function() {
 		this.resetPosCoords = { x: 0, y: 0 };
 		this.requires("Actor, spr_BlockDoor")
-			.attr({ w: 128, h: 180});
+			.attr({ w: (128 * worldScale), h: (180 * worldScale) });
 
 		this.hitBox = Crafty.e("Actor, Collision, Color")
 			.attr({ w: this.w - 10, h: 10 })
@@ -827,7 +832,7 @@ Crafty.c("BlockDoor", {
 Crafty.c("Checkpoint", {
 	init: function() {
 		this.requires("Actor, SpriteAnimation, spr_checkPoint_01")
-			.attr({ w: 100, h: 200});
+			.attr({ w: (100 * worldScale), h: (200 * worldScale) });
 		this.resetPosCoords = { x: this.x, y: this.y };
 		var thisParent = this;
 		this.reel("unfold_00r", 500, 0, 0, 9);
@@ -863,7 +868,7 @@ Crafty.c("Spike_Ball_Sprite", {
 		this.rotationSpeed = 10;
 
 		this.requires("Actor, SpriteAnimation, spr_spikeBall_01")
-			.attr({w: 150, h: 150, z: 8000});
+			.attr({ w: (150 * worldScale), h: (150 * worldScale), z: 8000 });
 
 		this.bind("EnterFrame", function(frameData) {
 			// ------ Update_This ------ //
@@ -888,7 +893,7 @@ Crafty.c("Spike_Ball_Sprite", {
 Crafty.c("Spike_Ball", {
 	init: function() {
 		this.requires("Actor, collisionDetection, Collision")
-			.attr({ w: 70, h: 70 });
+			.attr({ w: (70 * worldScale), h: (70 * worldScale) });
 		this.curVel = [2, 0];
 		this.resetVel = [2, 0];
 		this.resetPosCoords = { x: 0, y: 0};
@@ -937,8 +942,8 @@ Crafty.c("Spike_Ball", {
 			this.spriteObj.rotation += this.spriteObj.rotationSpeed * (frameData.dt/100);
 
 			// Apply velocities
-			this.x += this.curVel[0];
-			this.y += this.curVel[1];
+			this.x += (this.curVel[0] * worldScale);
+			this.y += (this.curVel[1] * worldScale);
 		});
 	},
 
@@ -1005,12 +1010,12 @@ Crafty.c("JumpPad", {
 		this.isActive = false;
 		this.resetPosCoords = { x: 0, y: 0 };
 		this.requires("Actor, SpriteAnimation, spr_jumpPad_01")
-			.attr({ w: 96, h: 96});
+			.attr({ w: (96 * worldScale), h: (96 * worldScale) });
 
 		this.reel("uncompress_00r", 1000, 0, 0, 12);
 		this.reel("uncompress_00l", 1000, 0, 1, 12);
-		this.reel("recompress_00r", 1000, 0, 2, 7);
-		this.reel("recompress_00l", 1000, 0, 3, 7);
+		this.reel("recompress_00r", 500, 0, 2, 7);
+		this.reel("recompress_00l", 500, 0, 3, 7);
 
 		this.hitBox = Crafty.e("Actor, Collision, Color")
 			.attr({ w: this.w - 10, h: 10 })
@@ -1018,8 +1023,10 @@ Crafty.c("JumpPad", {
 			.onHit("PC", function(collData) {
 				var curObj = collData[0].obj;
 				this.color("blue");
-				curObj.jump(-20);
-				thisParent.activate();
+				if (curObj.canJump) {
+					curObj.jump((-20 * worldScale));
+					thisParent.activate();
+				}
 			}, function() {
 				this.color("red");
 			});
@@ -1027,6 +1034,13 @@ Crafty.c("JumpPad", {
 
 	activate: function() {
 		this.isActive = true;
+		this.animate("uncompress_00r", 1);
 
+		this.bind("EnterFrame", function(frameData) {
+			if (this.isActive == true && this.getReel().currentFrame == this.getReel().frames.length-1) {
+				this.animate("recompress_00r", 1);
+				this.isActive = false;
+			}
+		});
 	},
 });

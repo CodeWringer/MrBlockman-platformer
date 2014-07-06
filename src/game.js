@@ -9,7 +9,9 @@
 var window_width = 1280,
 	window_height = 720,
 
-	worldGravity = 0.04, //Default value
+	worldGravity = 0.04, // Default value
+	worldScale = 0.8, // Global var for scaling the game world
+	// Use steps of .1, else the game breaks, as uneven numbers are produced
 
 	curLevel = 0;
 
