@@ -1027,6 +1027,10 @@ Crafty.c("Spike_Ball", {
 		});
 	},
 
+	setProperties: function(propertiesIn) {
+		this.collType = propertiesIn.collType;
+	},
+
 	resetPos: function() {
 		this.x = this.resetPosCoords.x;
 		this.y = this.resetPosCoords.y;
@@ -1128,11 +1132,106 @@ Crafty.c("JumpPad", {
 // ------------- ProjectileShooter ------------- //
 Crafty.c("ProjectileShooter", {
 	init: function() {
-		this.requires("Actor, SpriteAnimation, spr_projectileShooter_01")
-			.attr({ w: (40 * worldScale), h: (40 * worldScale) });
-		this.resetPosCoords = { x: this.x, y: this.y };
+		this.requires("Actor, Delay, Entity, SpriteAnimation, spr_projectileShooter_01")
+			.attr({ w: (90 * worldScale), h: (90 * worldScale), z: 5000 });
 		this.reel("shoot_00r", 1000, 0, 0, 13);
-		this.reel("shoot_00l", 1000, 0, 1, 13);
+		this.shootVel = 3;
+		this.direction = "left"; // Recognized: "left", "right", "up", "down"
 
+		this.delay(function() { // Start animation
+			this.animate("shoot_00r", 1);
+			this.delay(function() { // Instance projectile at end of animation
+				this.shootProjectile();
+			}, 700, 0);
+		}, 5000, -1); // Loop infinitely
+	},
+
+	setProperties: function(propertiesIn) {
+		this.origin("center");
+		this.direction = propertiesIn.direction;
+		if (propertiesIn.direction == "left") {
+			this.rotation = 180;
+		} else if (propertiesIn.direction == "right") {
+			this.rotation = 0;
+		} else if (propertiesIn.direction == "up") {
+			this.rotation = 270;
+		} else if (propertiesIn.direction == "down") {
+			this.rotation = 90;
+		}
+		if (propertiesIn.shootVel) {
+			this.shootVel = propertiesIn.shootVel;
+		} else {
+			this.shootVel = 3;
+		}
+	},
+
+	shootProjectile: function() {
+		entitiesList[entitiesListIndex] = Crafty.e("Projectile")
+			.attr({ x: (this.x + this.w/4), y: (this.y + this.h/4) });
+		if (this.direction == "left") {
+			entitiesList[entitiesListIndex].curVel = [-this.shootVel, 0];
+			entitiesList[entitiesListIndex].rotation = 0;
+		} else if (this.direction == "right") {
+			entitiesList[entitiesListIndex].curVel = [this.shootVel, 0];
+			entitiesList[entitiesListIndex].rotation = 180;
+		} else if (this.direction == "up") {
+			entitiesList[entitiesListIndex].curVel = [0, -this.shootVel];
+			entitiesList[entitiesListIndex].rotation = 90;
+		} else if (this.direction == "down") {
+			entitiesList[entitiesListIndex].curVel = [0, this.shootVel];
+			entitiesList[entitiesListIndex].rotation = 270;
+		}
+		entitiesListIndex++;
+	},
+});
+
+// ------------- Projectile ------------- //
+Crafty.c("Projectile", {
+	init: function() {
+		this.requires("Actor, Entity, Collision, collisionDetection, SpriteAnimation, spr_projectile_01")
+			.attr({ w: (50 * worldScale), h: (50 * worldScale) });
+		this.origin("center");
+		this.onHit("PC", function(collData) {
+			var curObj = collData[0].obj;
+			curObj.die();
+		}, function() {
+			// 
+		});
+		this.lifeTime = 0;
+		this.curVel = [0, 0];
+		this.broadphasebox = {x: 0, y: 0, w: 0, h: 0 };
+
+		this.deathEmitter = Crafty.e("ParticleEmitter");
+		this.deathEmitter.movParent = this;
+		this.deathEmitter.posOffset = {x: this.w, y: this.h/2};
+
+		this.bind("EnterFrame", function(frameData) {
+			// ---- Collision_Detection ---- //
+			this.updateBroadphasebox();
+			for (var i = solidBlockList.length-1; i > -1; --i) {
+				var tile = solidBlockList[i];
+				if (tile.x+tile.w > this.broadphasebox.x && tile.x < this.broadphasebox.x+this.broadphasebox.w) {
+					if (tile.y+tile.h > this.broadphasebox.y && tile.y < this.broadphasebox.y+this.broadphasebox.h) {
+						this.checkCollisionSweptAABB(tile);
+					}
+				}
+			}
+			for (var i = solidRampList.length-1; i > -1; --i) {
+				var rampTile = solidRampList[i];
+				if (rampTile.x+rampTile.w > this.broadphasebox.x && rampTile.x < this.broadphasebox.x+this.broadphasebox.w) {
+					if (rampTile.y+rampTile.h > this.broadphasebox.y && rampTile.y < this.broadphasebox.y+this.broadphasebox.h) {
+						this.checkCollisionSweptRamp(rampTile);
+					}
+				}
+			}
+
+			// Apply velocities
+			this.x += (this.curVel[0] * worldScale);
+			this.y += (this.curVel[1] * worldScale);
+		});
+	},
+
+	respondToCollision: function(obj, objDirType) {
+		this.destroy();
 	},
 });

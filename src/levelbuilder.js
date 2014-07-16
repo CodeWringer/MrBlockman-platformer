@@ -40,16 +40,16 @@ function initLevel(levelNum) {
 				// ------ Player_Character ------ //
 				case 2:
 					PC = Crafty.e("PC")
-						.attr({ x: tileX, y: tileY - tileSize.h*2 });
-					PC.resetPosCoords = { x: tileX, y: tileY - tileSize.h*2 };
+						.attr({ x: tileX, y: tileY - tileSize.h * 2 });
+					PC.resetPosCoords = { x: tileX, y: tileY - tileSize.h * 2 };
 					break;
 				// ------ Block_Door ------ //
 				case 3:
 					entitiesList[entitiesListIndex] = Crafty.e("BlockDoor")
 						.attr({ x: tileX, y: (tileY+tileSize.h) - (180 * worldScale) });
-						entitiesList[entitiesListIndex].hitBox.x = entitiesList[entitiesListIndex].x+5;
-						entitiesList[entitiesListIndex].hitBox.y = (entitiesList[entitiesListIndex].y+entitiesList[entitiesListIndex].h)-10;
-						entitiesListIndex++;
+					entitiesList[entitiesListIndex].hitBox.x = entitiesList[entitiesListIndex].x + 5;
+					entitiesList[entitiesListIndex].hitBox.y = (entitiesList[entitiesListIndex].y+entitiesList[entitiesListIndex].h) - 10;
+					entitiesListIndex++;
 					break;
 				// ------ Hazard_Floor ------ //
 				case 4:
@@ -64,24 +64,64 @@ function initLevel(levelNum) {
 				case 6:
 					entitiesList[entitiesListIndex] = Crafty.e("Checkpoint")
 						.attr({ x: tileX, y: (tileY+tileSize.h) - (200 * worldScale) });
-						entitiesList[entitiesListIndex].hitBox.x = entitiesList[entitiesListIndex].x+5;
-						entitiesList[entitiesListIndex].hitBox.y = (entitiesList[entitiesListIndex].y+entitiesList[entitiesListIndex].h)-10;
-						entitiesListIndex++;
+					entitiesList[entitiesListIndex].hitBox.x = entitiesList[entitiesListIndex].x + 5;
+					entitiesList[entitiesListIndex].hitBox.y = (entitiesList[entitiesListIndex].y+entitiesList[entitiesListIndex].h) - 10;
+					entitiesListIndex++;
 					break;
 				// ------ Spike_Ball ------ //
-				case 7:
+				case 20: // float
 					entitiesList[entitiesListIndex] = Crafty.e("Spike_Ball")
 						.attr({ x: tileX + (13 * worldScale), y: tileY + (13 * worldScale) });
-						entitiesList[entitiesListIndex].resetPosCoords = { x: tileX + (13 * worldScale), y: tileY + (13 * worldScale) };
-						entitiesListIndex++;
+					entitiesList[entitiesListIndex].resetPosCoords = { x: tileX + (13 * worldScale), y: tileY + (13 * worldScale) };
+					entitiesList[entitiesListIndex].setProperties({ collType: "float" });
+					entitiesListIndex++;
+					break;
+				case 21: // roll
+					entitiesList[entitiesListIndex] = Crafty.e("Spike_Ball")
+						.attr({ x: tileX + (13 * worldScale), y: tileY + (13 * worldScale) });
+					entitiesList[entitiesListIndex].resetPosCoords = { x: tileX + (13 * worldScale), y: tileY + (13 * worldScale) };
+					entitiesList[entitiesListIndex].setProperties({ collType: "roll" });
+					entitiesListIndex++;
+					break;
+				case 22: // bounce
+					entitiesList[entitiesListIndex] = Crafty.e("Spike_Ball")
+						.attr({ x: tileX + (13 * worldScale), y: tileY + (13 * worldScale) });
+					entitiesList[entitiesListIndex].resetPosCoords = { x: tileX + (13 * worldScale), y: tileY + (13 * worldScale) };
+					entitiesList[entitiesListIndex].setProperties({ collType: "bounce" });
+					entitiesListIndex++;
 					break;
 				// ------ JumpPad ------ //
 				case 8:
 					entitiesList[entitiesListIndex] = Crafty.e("JumpPad")
 						.attr({ x: tileX, y: tileY , w: tileSize.w, h: tileSize.h });
-						entitiesList[entitiesListIndex].hitBox.x = entitiesList[entitiesListIndex].x+5;
-						entitiesList[entitiesListIndex].hitBox.y = (entitiesList[entitiesListIndex].y+entitiesList[entitiesListIndex].h)-10;
-						entitiesListIndex++;
+					entitiesList[entitiesListIndex].hitBox.x = entitiesList[entitiesListIndex].x + 5;
+					entitiesList[entitiesListIndex].hitBox.y = (entitiesList[entitiesListIndex].y+entitiesList[entitiesListIndex].h) - 10;
+					entitiesListIndex++;
+					break;
+				// ------ ProjectileShooter ------ //
+				case 30: // left
+					entitiesList[entitiesListIndex] = Crafty.e("ProjectileShooter")
+						.attr({ x: tileX, y: tileY });
+					entitiesList[entitiesListIndex].setProperties({ direction: "left" });
+					entitiesListIndex++;
+					break;
+				case 31: // right
+					entitiesList[entitiesListIndex] = Crafty.e("ProjectileShooter")
+						.attr({ x: tileX, y: tileY });
+					entitiesList[entitiesListIndex].setProperties({ direction: "right" });
+					entitiesListIndex++;
+					break;
+				case 32: // up
+					entitiesList[entitiesListIndex] = Crafty.e("ProjectileShooter")
+						.attr({ x: tileX, y: tileY });
+					entitiesList[entitiesListIndex].setProperties({ direction: "up" });
+					entitiesListIndex++;
+					break;
+				case 33: // down
+					entitiesList[entitiesListIndex] = Crafty.e("ProjectileShooter")
+						.attr({ x: tileX, y: tileY });
+					entitiesList[entitiesListIndex].setProperties({ direction: "down" });
+					entitiesListIndex++;
 					break;
 				default:
 					console.log("Could not find case for number: " + maps[levelNum][yPosIndex][xPosIndex])

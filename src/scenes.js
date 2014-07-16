@@ -51,17 +51,21 @@ Crafty.defineScene("loading", function() {
 			Crafty.sprite(96, 96, "assets/solidBlocks_02_Ramps.png", {
 				spr_solidBlock_ramps_02: [0, 0]
 			});
-			// ---- spikeBall ---- //
+			// ---- SpikeBall_01 ---- //
 			Crafty.sprite(200, 200, "assets/SpikeBall_01.png", {
 				spr_spikeBall_01: [0, 0]
 			});
-			// ---- spikeBall ---- //
+			// ---- JumpPad_01 ---- //
 			Crafty.sprite(96, 96, "assets/JumpPad_01.png", {
 				spr_jumpPad_01: [0, 0]
 			});
-			// ---- spikeBall ---- //
+			// ---- ProjectileShooter_01 ---- //
 			Crafty.sprite(90, 90, "assets/ProjectileShooter_01.png", {
 				spr_projectileShooter_01: [0, 0]
+			});
+			// ---- Projectile_01 ---- //
+			Crafty.sprite(200, 200, "assets/Projectile_01.png", {
+				spr_projectile_01: [0, 0]
 			});
 
 			Crafty.enterScene("Game");
