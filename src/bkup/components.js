@@ -612,8 +612,8 @@ Crafty.c("PC", {
 			// Delay the deathEmitter
 			this.delay(function() {
 				// this.deathEmitter.emitParticles( (40 * worldScale), (60 * worldScale), emitVel = { direction: "randomUpWideBurst", strength: 1 }, "fall", "noCollide", true, 8000, 1, 14, null, "spr_PC_Parachute", 0);
-				this.deathEmitterSettings = { emitW: (40 * worldScale), emitH: (60 * worldScale), emitDir: "randomUpWideBurst", emitStrength: 1, gravityType: "slowFall", emitCollSetting: "noCollide", emitExpire: true, emitLifeTime: 5000, sprite: "spr_PC_Parachute", fadeOutTime: 2000 };
-				this.deathEmitter.emitParticles( this.deathEmitterSettings, 1, 12);
+				this.deathEmitterSettings = { emitW: (40 * worldScale), emitH: (60 * worldScale), emitDir: "randomUpWideBurst", emitStrength: 1, gravityType: "fall", emitCollSetting: "noCollide", emitExpire: "true", emitLifeTime: 8000, sprite: "spr_PC_Parachute" };
+				this.deathEmitter.emitParticles( this.deathEmitterSettings, 1, 14);
 			}, 650, 0);
 			// Delay resetPos
 			this.delay(function() {
@@ -714,17 +714,6 @@ Crafty.c("ParticleEmitter", {
 				var rotationSpeedOut = 0;
 			}
 
-			if (emitSettingsIn.fadeOutTime) {
-				var fadeOutTimeOut = emitSettingsIn.fadeOutTime;
-			} else {
-				var fadeOutTimeOut = 0;
-			}
-			if (emitSettingsIn.fadeInTime) {
-				var fadeInTimeOut = emitSettingsIn.fadeInTime;
-			} else {
-				var fadeInTimeOut = 0;
-			}
-
 			if (emitSettingsIn.emitDir != null) {
 				// Find out if emitVelIn.direction is among the list of recognized directions
 				if (emitSettingsIn.emitDir == "randomUpWideBurst") {
@@ -748,16 +737,15 @@ Crafty.c("ParticleEmitter", {
 				emitVelOut.y = 0;
 			}
 
-			if (emitSettingsIn.gravityType != "decelerate" && emitSettingsIn.gravityType != "slowFall") {
-				var gravityTypeOut = "ignore";
+			if (emitSettingsIn.gravityType != "default" && emitSettingsIn.gravityType != "decelerate" && emitSettingsIn.gravityType != "ignore") {
+				var gravityTypeOut = "default";
 			} else {
 				var gravityTypeOut = emitSettingsIn.gravityType;
 			}
 
 			// ---- Particle_Creation ---- //
-			var propertiesOut = { x: this.x, y: this.y, w: emitSettingsIn.emitW, h: emitSettingsIn.emitH, xVel: emitVelOut.x, yVel: emitVelOut.y, gravityType: gravityTypeOut, collSetting: emitSettingsIn.emitCollSetting, expire: emitSettingsIn.emitExpire, lifeTime: emitSettingsIn.emitLifeTime, color: colorOut, sprite: spriteOut, rotationSpeed: rotationSpeedOut, fadeOutTime: fadeOutTimeOut, fadeInTime: fadeInTimeOut };
 			particleList[particleListIndex] = Crafty.e("Particle");
-			particleList[particleListIndex].setProperties( propertiesOut );
+			particleList[particleListIndex].setProperties( this.x, this.y, emitSettingsIn.emitW, emitSettingsIn.emitH, emitVelOut, gravityTypeOut, emitSettingsIn.emitCollSetting, emitSettingsIn.emitExpire, emitSettingsIn.emitLifeTime, colorOut, spriteOut, rotationSpeedOut );
 			particleListIndex++;
 		}, emitDelay, --emitCount);
 	},
@@ -774,15 +762,7 @@ Crafty.c("Particle", {
 		this.lifeTime = 1000;	// In ms
 		this.expire = true;		// Sets whether particle will die after lifeTime runs out
 		this.collisionSetting = "collide"; // Allowed types: dieCollide, noCollide, collide
-		this.gravityType = "ignore"; // Allowed types: slowFall, decelerate, ignore
-
-		this.alpha = 0;
-		this.fadeOutTime = 0; // In ms, how long it takes for this particle to fade out
-		this.fadeInTime = 0; // In ms, how long it takes for this particle to fade in
-		this.framesToFadeOut = 0; // Used for calculating alpha blending of the fade out effect
-		this.framesToFadeIn = 0; // Used for calculating alpha blending of the fade in effect
-		this.fadeOutTimeInitial = 0; // Used for calculating alpha blending of the fade out effect
-		this.fadeInTimeInitial = 0; // Used for calculating alpha blending of the fade in effect
+		this.gravityType = "default"; // Allowed types: default, fall, decelerate, ignore
 
 		this.collObj;			// Object to hold information used in collision detection
 		
@@ -790,15 +770,9 @@ Crafty.c("Particle", {
 		this.origin("center");
 
 		this.bind("EnterFrame", function(frameData) {
-			// ---- Initial_Fade_In ---- //
-			if (this.fadeInTime > 0) {
-				this.framesToFadeIn = (this.fadeInTimeInitial / frameData.dt);
-				this.alpha += (1 / this.framesToFadeIn);
-				this.fadeInTime -= 1000 * (frameData.dt/1000);
-			}
 
 			// --------- Velocity_Changes --------- //
-			// ----- Velocity_x ----- //
+			// ----- velocity_x ----- //
 			if (this.curVel[0] < -0.1) {
 				this.curVel[0] += this.velSlow * (frameData.dt/1000);
 			} else if (this.curVel[0] > 0.1) {
@@ -807,8 +781,10 @@ Crafty.c("Particle", {
 				this.curVel[0] = 0;
 			}
 			
-			// ----- Velocity_y ----- //
-			if (this.gravityType == "slowFall") {
+			// ----- velocity_y ----- //
+			if (this.gravityType == "default") {
+				this.curVel[1] += worldGravity*100 * (frameData.dt/1000);
+			} else if (this.gravityType == "fall") {
 				if (this.curVel[1] < 1) {
 					this.curVel[1] += worldGravity*50 * (frameData.dt/1000);
 				}
@@ -817,22 +793,14 @@ Crafty.c("Particle", {
 				this.curVel[1] -= (this.curVel[1]/25);
 			}
 
-			// ---- Apply_Velocities ---- //
+			// Apply velocities
 			this.x += this.curVel[0];
 			this.y += this.curVel[1];
 
-			// --------- LifeTime --------- //
-			if (this.expire == true && this.fadeInTime <= 0) {
-				this.lifeTime -= 1000 * (frameData.dt/1000);
-				if (this.lifeTime <= 0) {
-					// ---- Fade_Out ---- //
-					this.framesToFadeOut = (this.fadeOutTimeInitial / frameData.dt);
-					this.alpha -= (1 / this.framesToFadeOut);
-					this.fadeOutTime -= 1000 * (frameData.dt/1000);
-					if (this.fadeOutTime <= 0) {
-						this.destroy();
-					}
-				}
+			// --------- lifeTime --------- //
+			this.lifeTime -= 1000 * (frameData.dt/1000); // 
+			if (this.expire == true && this.lifeTime <= 0) {
+				this.destroy();
 			}
 
 			// --------- rotation --------- //
@@ -840,28 +808,28 @@ Crafty.c("Particle", {
 		});
 	},
 
-	setProperties: function( propertiesIn ) {
-		if (propertiesIn.xVel) {
-			this.curVel[0] = propertiesIn.xVel;
+	setProperties: function( xIn, yIn, emitWIn, emitHIn, emitVelIn, gravityTypeIn, emitCollSettingIn, emitExpireIn, emitLifeTimeIn, colorIn, spriteIn, rotationSpeedIn ) {
+		if (emitVelIn.x) {
+			this.curVel[0] = emitVelIn.x;
 		}
-		if (propertiesIn.yVel) {
-			this.curVel[1] = propertiesIn.yVel;
+		if (emitVelIn.y) {
+			this.curVel[1] = emitVelIn.y;
 		}
 
-		if (propertiesIn.color != null) {
+		if (colorIn != null) {
 			this.requires("Color");
-			this.color(propertiesIn.color);
+			this.color(colorIn);
 		}
 
 		// If there is a sprite given, assign the sprite to this
-		if (propertiesIn.sprite != null) {
-			this.requires("SpriteAnimation, " + propertiesIn.sprite);
+		if (spriteIn != null) {
+			this.requires("SpriteAnimation, " + spriteIn);
 			// If the sprite is recognized here, it will automatically play the correct animation at creation
 			// ---- Recognized_Sprites_List ---- //
-			if (propertiesIn.sprite == "spr_PC_Parachute") {
+			if (spriteIn == "spr_PC_Parachute") {
 				this.reel("parachute_00r", 2000, 0, 0, 18);
 				this.reel("parachute_00l", 2000, 0, 1, 18);
-				if (propertiesIn.xVel < 0) {
+				if (emitVelIn.x < 0) {
 					this.animate("parachute_00l", 1);
 				} else {
 					this.animate("parachute_00r", 1);
@@ -869,22 +837,15 @@ Crafty.c("Particle", {
 			}
 		}
 
-		this.x = propertiesIn.x - propertiesIn.w/2;
-		this.y = propertiesIn.y - propertiesIn.h/2;
-		this.w = propertiesIn.w;
-		this.h = propertiesIn.h;
-		this.rotationSpeed = propertiesIn.rotationSpeed;
-		this.collisionSetting = propertiesIn.collSetting;
-		this.gravityType = propertiesIn.gravityType;
-		this.expire = propertiesIn.expire;
-		this.lifeTime = propertiesIn.lifeTime;
-		this.fadeOutTime = propertiesIn.fadeOutTime;
-		this.fadeInTime = propertiesIn.fadeInTime;
-		this.fadeOutTimeInitial = propertiesIn.fadeOutTime;
-		this.fadeInTimeInitial = propertiesIn.fadeInTime;
-		if (this.fadeInTime > 0) {
-			this.alpha = 0;
-		}
+		this.rotationSpeed = rotationSpeedIn;
+		this.x = xIn - emitWIn/2;
+		this.y = yIn - emitHIn/2;
+		this.w = emitWIn;
+		this.h = emitHIn;
+		this.collisionSetting = emitCollSettingIn;
+		this.gravityType = gravityTypeIn;
+		this.expire = emitExpireIn;
+		this.lifeTime = emitLifeTimeIn;
 	},
 });
 
@@ -935,7 +896,7 @@ Crafty.c("Checkpoint", {
 		if (!this.isActive) {
 			this.isActive = true;
 			this.animate("unfold_00r", 1);
-			curObjIn.setResetPos(this.x, (this.y + this.h - curObjIn.h - 10));
+			curObjIn.setResetPos(this.x, this.y);
 		}
 	},
 });
