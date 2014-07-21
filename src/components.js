@@ -259,6 +259,18 @@ Crafty.c("Actor", {
 	},
 });
 
+// ------------- SprLocOffset ------------- //
+Crafty.c("SprLocOffset", {
+	setOffset: function() {
+		if (this.movParent != null) {
+			this.offset.x = (this.w - this.movParent.w) / 2;
+			this.offset.y = (this.h - this.movParent.h) / 2;
+		} else {
+			console.log("No movparent for PC_Sprite, can't set offset!");
+		}
+	},
+});
+
 // -------- SolidBlock_ramp -------- //
 Crafty.c("SolidBlock_ramp", {
 	init: function() {
@@ -369,7 +381,7 @@ Crafty.c("PC_Sprite", {
 		this.movParent = null;
 		this.offset = { x: 0, y: 0 };
 
-		this.requires("Actor, SpriteAnimation, spr_PC")
+		this.requires("Actor, SpriteAnimation, SprLocOffset, spr_PC")
 			.attr({w: (70 * worldScale), h: (95 * worldScale), z: 9001});
 
 		// ------ Define_Animations ------ //
@@ -394,15 +406,6 @@ Crafty.c("PC_Sprite", {
 				this.y = this.movParent.y - this.offset.y;
 			}
 		});
-	},
-
-	setOffset: function() {
-		if (this.movParent != null) {
-			this.offset.x = (this.w - this.movParent.w) / 2;
-			this.offset.y = (this.h - this.movParent.h) / 2;
-		} else {
-			console.log("No movparent for PC_Sprite, can't set offset!");
-		}
 	},
 });
 
@@ -611,7 +614,6 @@ Crafty.c("PC", {
 			}, 900, 0);
 			// Delay the deathEmitter
 			this.delay(function() {
-				// this.deathEmitter.emitParticles( (40 * worldScale), (60 * worldScale), emitVel = { direction: "randomUpWideBurst", strength: 1 }, "fall", "noCollide", true, 8000, 1, 14, null, "spr_PC_Parachute", 0);
 				this.deathEmitterSettings = { emitW: (40 * worldScale), emitH: (60 * worldScale), emitDir: "randomUpWideBurst", emitStrength: 1, gravityType: "slowFall", emitCollSetting: "noCollide", emitExpire: true, emitLifeTime: 5000, sprite: "spr_PC_Parachute", fadeOutTime: 2000 };
 				this.deathEmitter.emitParticles( this.deathEmitterSettings, 1, 12);
 			}, 650, 0);
@@ -636,6 +638,7 @@ Crafty.c("PC", {
 	},
 
 	respondToCollision: function(obj, objDirType) {
+		this.feetDustEmitterSettings = { emitW: (40 * worldScale), emitH: (40 * worldScale), emitDir: "randomHorizontalBurst", rotationSpeed: 45, emitStrength: 1, gravityType: "decelerate", emitCollSetting: "noCollide", emitExpire: true, emitLifeTime: 500, sprite: "spr_dust_01", fadeInTime: 500, fadeOutTime: 800 };
 		var objL = obj.x,
 			objR = obj.x + obj.w,
 			objT = obj.y,
@@ -652,15 +655,21 @@ Crafty.c("PC", {
 			this.y = objB;
 		} else if (objDirType == "isFloor") {
 			if (this.curVel[1] > 8) {
-				// this.feetDustEmitter.emitParticles( (6 * worldScale), (6 * worldScale), emitVel = { direction: "randomUpNarrowBurst", strength: 1 }, "decelerate", "noCollide", true, 1000, 1, 14, "rgb(183, 163, 139)", null, 65);
+				this.feetDustEmitter.emitParticles( this.feetDustEmitterSettings, 1, 5);
 			}
 			this.curVel[1] = 0;
 			this.y = objT - this.h;
 
 		} else if (objDirType == "isRampBL") { // Ramps
+			if (this.curVel[1] > 8) {
+				this.feetDustEmitter.emitParticles( this.feetDustEmitterSettings, 1, 5);
+			}
 			this.curVel[1] = 0;
 			this.y = obj.getyLinF(this.x + this.curVel[0]) - this.h;
 		} else if (objDirType == "isRampBR") {
+			if (this.curVel[1] > 8) {
+				this.feetDustEmitter.emitParticles( this.feetDustEmitterSettings, 1, 5);
+			}
 			this.curVel[1] = 0;
 			this.y = obj.getyLinF(this.x + this.w + this.curVel[0]) - this.h;
 		} else if (objDirType == "isRampTL") {
@@ -728,16 +737,28 @@ Crafty.c("ParticleEmitter", {
 			if (emitSettingsIn.emitDir != null) {
 				// Find out if emitVelIn.direction is among the list of recognized directions
 				if (emitSettingsIn.emitDir == "randomUpWideBurst") {
-					emitVelOut.x = getRandomArbitrary((1 * emitSettingsIn.emitStrength), (2 * emitSettingsIn.emitStrength));
-					emitVelOut.y = getRandomArbitrary((2 * emitSettingsIn.emitStrength), (4 * emitSettingsIn.emitStrength)) * (-1);
+					emitVelOut.x = getRandomArbitrary((0 * emitSettingsIn.emitStrength), (3 * emitSettingsIn.emitStrength));
+					emitVelOut.y = getRandomArbitrary((1 * emitSettingsIn.emitStrength), (2 * emitSettingsIn.emitStrength)) * (-1);
 					if (Math.random() < 0.5) {
 						emitVelOut.x = emitVelOut.x * (-1);
 					}
 				} else if (emitSettingsIn.emitDir == "randomUpNarrowBurst") {
-					emitVelOut.x = getRandomArbitrary((0 * emitSettingsIn.emitStrength), (2 * emitSettingsIn.emitStrength));
-					emitVelOut.y = getRandomArbitrary((0 * emitSettingsIn.emitStrength), (1 * emitSettingsIn.emitStrength)) * (-1);
+					emitVelOut.x = getRandomArbitrary((0 * emitSettingsIn.emitStrength), (1 * emitSettingsIn.emitStrength));
+					emitVelOut.y = getRandomArbitrary((1 * emitSettingsIn.emitStrength), (2 * emitSettingsIn.emitStrength)) * (-1);
 					if (Math.random() < 0.5) {
 						emitVelOut.x = emitVelOut.x * (-1);
+					}
+				} else if (emitSettingsIn.emitDir == "randomHorizontalBurst") {
+					emitVelOut.x = getRandomArbitrary((1 * emitSettingsIn.emitStrength), (3 * emitSettingsIn.emitStrength));
+					emitVelOut.y = getRandomArbitrary(0, 1) * (-1);
+					if (Math.random() < 0.5) {
+						emitVelOut.x = emitVelOut.x * (-1);
+					}
+				} else if (emitSettingsIn.emitDir == "randomVerticalBurst") {
+					emitVelOut.x = getRandomArbitrary(0, 1);
+					emitVelOut.y = getRandomArbitrary((1 * emitSettingsIn.emitStrength), (3 * emitSettingsIn.emitStrength));
+					if (Math.random() < 0.5) {
+						emitVelOut.y = emitVelOut.y * (-1);
 					}
 				}
 			} else if (emitSettingsIn.emitVelX && emitSettingsIn.emitVelY) {
@@ -798,22 +819,23 @@ Crafty.c("Particle", {
 			}
 
 			// --------- Velocity_Changes --------- //
-			// ----- Velocity_x ----- //
-			if (this.curVel[0] < -0.1) {
-				this.curVel[0] += this.velSlow * (frameData.dt/1000);
-			} else if (this.curVel[0] > 0.1) {
-				this.curVel[0] -= this.velSlow * (frameData.dt/1000);
-			} else {
-				this.curVel[0] = 0;
-			}
-			
-			// ----- Velocity_y ----- //
 			if (this.gravityType == "slowFall") {
+				// ----- Velocity_x ----- //
+				if (this.curVel[0] < -0.1) {
+					this.curVel[0] += this.velSlow * (frameData.dt/1000);
+				} else if (this.curVel[0] > 0.1) {
+					this.curVel[0] -= this.velSlow * (frameData.dt/1000);
+				} else {
+					this.curVel[0] = 0;
+				}
+				// ----- Velocity_y ----- //
 				if (this.curVel[1] < 1) {
 					this.curVel[1] += worldGravity*50 * (frameData.dt/1000);
 				}
 			} else if (this.gravityType == "decelerate") {
+				// ----- Velocity_x ----- //
 				this.curVel[0] -= (this.curVel[0]/25);
+				// ----- Velocity_y ----- //
 				this.curVel[1] -= (this.curVel[1]/25);
 			}
 
@@ -873,6 +895,7 @@ Crafty.c("Particle", {
 		this.y = propertiesIn.y - propertiesIn.h/2;
 		this.w = propertiesIn.w;
 		this.h = propertiesIn.h;
+		this.origin("center");
 		this.rotationSpeed = propertiesIn.rotationSpeed;
 		this.collisionSetting = propertiesIn.collSetting;
 		this.gravityType = propertiesIn.gravityType;
@@ -940,14 +963,14 @@ Crafty.c("Checkpoint", {
 	},
 });
 
-// ------------- Spike_Ball_Sprite ------------- //
-Crafty.c("Spike_Ball_Sprite", {
+// ------------- Spike_Ball_Sprite_01 ------------- //
+Crafty.c("Spike_Ball_Sprite_01", {
 	init: function() {
 		this.movParent = null;
 		this.offset = { x: 0, y: 0 };
 		this.rotationSpeed = 90;
 
-		this.requires("Actor, SpriteAnimation, spr_spikeBall_01")
+		this.requires("Actor, SpriteAnimation, SprLocOffset, spr_spikeBall_01")
 			.attr({ w: (150 * worldScale), h: (150 * worldScale), z: 8000 });
 
 		this.bind("EnterFrame", function(frameData) {
@@ -958,19 +981,10 @@ Crafty.c("Spike_Ball_Sprite", {
 			}
 		});
 	},
-
-	setOffset: function() {
-		if (this.movParent != null) {
-			this.offset.x = (this.w - this.movParent.w) / 2;
-			this.offset.y = (this.h - this.movParent.h) / 2;
-		} else {
-			console.log("No movparent for sprite, can't set offset!");
-		}
-	},
 });
 
-// ------------- Spike_Ball ------------- //
-Crafty.c("Spike_Ball", {
+// ------------- Spike_Ball_01 ------------- //
+Crafty.c("Spike_Ball_01", {
 	init: function() {
 		this.requires("Actor, collisionDetection, Collision")
 			.attr({ w: (70 * worldScale), h: (70 * worldScale) });
@@ -979,11 +993,16 @@ Crafty.c("Spike_Ball", {
 		this.resetPosCoords = { x: 0, y: 0};
 		this.broadphasebox = {x: 0, y: 0, w: 0, h: 0 };
 		this.collType = "float"; // Allowed: float, roll, bounce
+		this.bounceImpulse = -12;
 
-		this.spriteObj = Crafty.e("Spike_Ball_Sprite");
+		this.spriteObj = Crafty.e("Spike_Ball_Sprite_01");
 		this.spriteObj.movParent = this;
 		this.spriteObj.setOffset();
 		this.spriteObj.origin("center");
+
+		this.dustEmitter = Crafty.e("ParticleEmitter");
+		this.dustEmitter.movParent = this;
+		this.dustEmitter.posOffset = {x: 0, y: 0};
 
 		this.onHit("PC", function(collData) {
 			var curObj = collData[0].obj;
@@ -999,6 +1018,11 @@ Crafty.c("Spike_Ball", {
 		});
 
 		this.bind("EnterFrame", function(frameData) {
+			// ----- velocity_y ----- //
+			if (this.collType == "roll" || this.collType == "bounce") {
+				this.curVel[1] += (worldGravity * worldScale) * frameData.dt/2; //Gravity
+			}
+
 			// ---- Collision_Detection ---- //
 			this.updateBroadphasebox();
 			for (var i = solidBlockList.length-1; i > -1; --i) {
@@ -1028,7 +1052,22 @@ Crafty.c("Spike_Ball", {
 	},
 
 	setProperties: function(propertiesIn) {
-		this.collType = propertiesIn.collType;
+		if (propertiesIn.collType) {
+			this.collType = propertiesIn.collType;
+		} else {
+			this.collType = "float";
+		}
+		if (propertiesIn.velocity) {
+			this.curVel[0] = propertiesIn.velocity.x;
+			this.curVel[1] = propertiesIn.velocity.y;
+			this.resetVel[0] = propertiesIn.velocity.x;
+			this.resetVel[1] = propertiesIn.velocity.y;
+		} else {
+			this.curVel[0] = 2;
+			this.curVel[1] = 0;
+			this.resetVel[0] = 2;
+			this.resetVel[1] = 0;
+		}
 	},
 
 	resetPos: function() {
@@ -1041,6 +1080,8 @@ Crafty.c("Spike_Ball", {
 	setResetPos: function(xIn, yIn) {
 		this.resetPosCoords.x = xIn;
 		this.resetPosCoords.y = yIn;
+		this.resetVel[0] = this.curVel[0];
+		this.resetVel[1] = this.curVel[1];
 	},
 
 	respondToCollision: function(obj, objDirType) {
@@ -1052,38 +1093,327 @@ Crafty.c("Spike_Ball", {
 			xVel = this.curVel[0],
 			yVel = this.curVel[1];
 
-		this.spriteObj.rotationSpeed = -this.spriteObj.rotationSpeed;
-
+		this.dustEmitCount = 3;
+		this.dustEmitterSettings = { emitW: (60 * worldScale), emitH: (60 * worldScale), emitDir: "randomVerticalBurst", rotationSpeed: 45, emitStrength: 1, gravityType: "decelerate", emitCollSetting: "noCollide", emitExpire: true, emitLifeTime: 500, sprite: "spr_dust_01", fadeInTime: 500, fadeOutTime: 800 };
+		// ---- Wall_L ---- //
 		if (objDirType == "isWallL") { // SolidBlocks
+			this.spriteObj.rotationSpeed = -this.spriteObj.rotationSpeed;
 			this.curVel[0] = -xVel;
 			this.x = objL - this.w;
+
+			this.dustEmitter.posOffset = {x: 0, y: this.h/2};
+			this.dustEmitterSettings.emitDir = "randomVerticalBurst";
+			this.dustEmitter.emitParticles( this.dustEmitterSettings, 1, this.dustEmitCount);
+		// ---- Wall_R ---- //
 		} else if (objDirType == "isWallR") {
+			this.spriteObj.rotationSpeed = -this.spriteObj.rotationSpeed;
 			this.curVel[0] = -xVel;
 			this.x = objR;
-		} else if (objDirType == "isCeiling") {
-			this.curVel[1] = -yVel;
-			this.y = objB;
-		} else if (objDirType == "isFloor") {
-			this.curVel[1] = -yVel;
-			this.y = objT - this.h;
 
+			this.dustEmitter.posOffset = {x: this.w, y: this.h/2};
+			this.dustEmitterSettings.emitDir = "randomVerticalBurst";
+			this.dustEmitter.emitParticles( this.dustEmitterSettings, 1, this.dustEmitCount);
+		// ---- Ceiling ---- //
+		} else if (objDirType == "isCeiling") {
+			if (this.collType == "float") {
+				this.spriteObj.rotationSpeed = -this.spriteObj.rotationSpeed;
+				this.curVel[1] = -yVel;
+				this.y = objB;
+
+				this.dustEmitter.posOffset = {x: this.w/2, y: 0};
+				this.dustEmitterSettings.emitDir = "randomHorizontalBurst";
+				this.dustEmitter.emitParticles( this.dustEmitterSettings, 1, this.dustEmitCount);
+			} else if (this.collType == "roll") {
+				this.curVel[1] = 0;
+				this.y = objB;
+			} else if (this.collType == "bounce") {
+				this.curVel[1] = 0;
+				this.y = objB;
+
+				this.dustEmitter.posOffset = {x: this.w/2, y: 0};
+				this.dustEmitterSettings.emitDir = "randomHorizontalBurst";
+				this.dustEmitter.emitParticles( this.dustEmitterSettings, 1, this.dustEmitCount);
+			}
+		// ---- Floor ---- //
+		} else if (objDirType == "isFloor") {
+			if (this.collType == "float") {
+				this.spriteObj.rotationSpeed = -this.spriteObj.rotationSpeed;
+				this.curVel[1] = -yVel;
+				this.y = objT - this.h;
+
+				this.dustEmitter.posOffset = {x: this.w/2, y: this.h};
+				this.dustEmitterSettings.emitDir = "randomHorizontalBurst";
+				this.dustEmitter.emitParticles( this.dustEmitterSettings, 1, this.dustEmitCount);
+			} else if (this.collType == "roll") {
+				if (yVel > 6) {
+					this.dustEmitter.posOffset = {x: this.w/2, y: this.h};
+					this.dustEmitterSettings.emitDir = "randomHorizontalBurst";
+					this.dustEmitter.emitParticles( this.dustEmitterSettings, 1, this.dustEmitCount);
+				}
+				this.curVel[1] = 0;
+				this.y = objT - this.h;
+			} else if (this.collType == "bounce") {
+				this.curVel[1] = this.bounceImpulse;
+				this.y = objT - this.h;
+
+				this.dustEmitter.posOffset = {x: this.w/2, y: this.h};
+				this.dustEmitterSettings.emitDir = "randomHorizontalBurst";
+				this.dustEmitter.emitParticles( this.dustEmitterSettings, 1, this.dustEmitCount);
+			}
+
+		// ---- Ramp_BL ---- //
 		} else if (objDirType == "isRampBL") { // Ramps
-			this.curVel[0] = yVel;
-			this.curVel[1] = xVel;
+			if (this.collType == "float") {
+				this.spriteObj.rotationSpeed = -this.spriteObj.rotationSpeed;
+				this.curVel[0] = yVel;
+				this.curVel[1] = xVel;
+
+				this.dustEmitter.posOffset = {x: 0, y: this.h};
+				this.dustEmitterSettings.emitDir = "randomHorizontalBurst";
+				this.dustEmitter.emitParticles( this.dustEmitterSettings, 1, this.dustEmitCount);
+			} else if (this.collType == "roll") {
+				if (xVel < 0) {
+					if (this.x < obj.x + obj.w/2) {
+						this.spriteObj.rotationSpeed = -this.spriteObj.rotationSpeed;
+						this.curVel[0] = -xVel;
+					}
+				}
+				if (yVel > 6) {
+					this.dustEmitter.posOffset = {x: 0, y: this.h};
+					this.dustEmitterSettings.emitDir = "randomHorizontalBurst";
+					this.dustEmitter.emitParticles( this.dustEmitterSettings, 1, this.dustEmitCount);
+				}
+				this.curVel[1] = 0;
+			} else if (this.collType == "bounce") {
+				this.spriteObj.rotationSpeed = -this.spriteObj.rotationSpeed;
+				if (xVel < 0) {
+					this.curVel[0] = -xVel;
+				}
+				this.curVel[1] = this.bounceImpulse;
+
+				this.dustEmitter.posOffset = {x: 0, y: this.h};
+				this.dustEmitterSettings.emitDir = "randomHorizontalBurst";
+				this.dustEmitter.emitParticles( this.dustEmitterSettings, 1, this.dustEmitCount);
+			}
 			this.y = obj.getyLinF(this.x) - this.h;
+		// ---- Ramp_BR ---- //
 		} else if (objDirType == "isRampBR") {
-			this.curVel[0] = -yVel;
-			this.curVel[1] = -xVel;
+			if (this.collType == "float") {
+				this.spriteObj.rotationSpeed = -this.spriteObj.rotationSpeed;
+				this.curVel[0] = -yVel;
+				this.curVel[1] = -xVel;
+
+				this.dustEmitter.posOffset = {x: this.w, y: this.h};
+				this.dustEmitterSettings.emitDir = "randomHorizontalBurst";
+				this.dustEmitter.emitParticles( this.dustEmitterSettings, 1, this.dustEmitCount);
+			} else if (this.collType == "roll") {
+				if (xVel > 0) {
+					if (this.x + this.w > obj.x + obj.w/2) {
+						this.spriteObj.rotationSpeed = -this.spriteObj.rotationSpeed;
+						this.curVel[0] = -xVel;
+					}
+				}
+				if (yVel > 6) {
+					this.dustEmitter.posOffset = {x: this.w, y: this.h};
+					this.dustEmitterSettings.emitDir = "randomHorizontalBurst";
+					this.dustEmitter.emitParticles( this.dustEmitterSettings, 1, this.dustEmitCount);
+				}
+				this.curVel[1] = 0;
+			} else if (this.collType == "bounce") {
+				this.spriteObj.rotationSpeed = -this.spriteObj.rotationSpeed;
+				if (xVel < 0) {
+					this.curVel[0] = -xVel;
+				}
+				this.curVel[1] = this.bounceImpulse;
+
+				this.dustEmitter.posOffset = {x: this.w, y: this.h};
+				this.dustEmitterSettings.emitDir = "randomHorizontalBurst";
+				this.dustEmitter.emitParticles( this.dustEmitterSettings, 1, this.dustEmitCount);
+			}
 			this.y = obj.getyLinF(this.x + this.w) - this.h;
+		// ---- Ramp_TL ---- //
 		} else if (objDirType == "isRampTL") {
-			this.curVel[0] = -yVel;
-			this.curVel[1] = -xVel;
+			if (this.collType == "float") {
+				this.spriteObj.rotationSpeed = -this.spriteObj.rotationSpeed;
+				this.curVel[0] = -yVel;
+				this.curVel[1] = -xVel;
+
+				this.dustEmitter.posOffset = {x: 0, y: 0};
+				this.dustEmitterSettings.emitDir = "randomHorizontalBurst";
+				this.dustEmitter.emitParticles( this.dustEmitterSettings, 1, this.dustEmitCount);
+			} else if (this.collType == "roll") {
+				// 
+			} else if (this.collType == "bounce") {
+				this.spriteObj.rotationSpeed = -this.spriteObj.rotationSpeed;
+				this.curVel[0] = -xVel;
+				this.curVel[1] = 0;
+
+				this.dustEmitter.posOffset = {x: 0, y: 0};
+				this.dustEmitterSettings.emitDir = "randomHorizontalBurst";
+				this.dustEmitter.emitParticles( this.dustEmitterSettings, 1, this.dustEmitCount);
+			}
 			this.y = obj.getyLinF(this.x);
+		// ---- Ramp_TR ---- //
 		} else if (objDirType == "isRampTR") {
-			this.curVel[0] = yVel;
-			this.curVel[1] = xVel;
+			if (this.collType == "float") {
+				this.spriteObj.rotationSpeed = -this.spriteObj.rotationSpeed;
+				this.curVel[0] = yVel;
+				this.curVel[1] = xVel;
+
+				this.dustEmitter.posOffset = {x: this.w, y: 0};
+				this.dustEmitterSettings.emitDir = "randomHorizontalBurst";
+				this.dustEmitter.emitParticles( this.dustEmitterSettings, 1, this.dustEmitCount);
+			} else if (this.collType == "roll") {
+				// 
+			} else if (this.collType == "bounce") {
+				this.spriteObj.rotationSpeed = -this.spriteObj.rotationSpeed;
+				this.curVel[0] = -xVel;
+				this.curVel[1] = 0;
+
+				this.dustEmitter.posOffset = {x: this.w, y: 0};
+				this.dustEmitterSettings.emitDir = "randomHorizontalBurst";
+				this.dustEmitter.emitParticles( this.dustEmitterSettings, 1, this.dustEmitCount);
+			}
 			this.y = obj.getyLinF(this.x + this.w);
 		}
+	},
+});
+
+// ------------- Spike_Ball_Sprite_02 ------------- //
+Crafty.c("Spike_Ball_Sprite_02", {
+	init: function() {
+		this.movParent = null;
+		this.offset = { x: 0, y: 0 };
+		this.rotationSpeed = -150;
+
+		this.requires("Actor, SpriteAnimation, SprLocOffset, spr_spikeBall_02")
+			.attr({ w: (120 * worldScale), h: (120 * worldScale), z: 8000 });
+
+		this.bind("EnterFrame", function(frameData) {
+			// ------ Update_This ------ //
+			if (this.movParent != null) {
+				this.x = this.movParent.x - this.offset.x;
+				this.y = this.movParent.y - this.offset.y;
+			}
+		});
+	},
+});
+
+// ------------- spr_SpikeBallOrigin_Sprite_02 ------------- //
+Crafty.c("spr_SpikeBallOrigin_Sprite_02", {
+	init: function() {
+		this.movParent = null;
+		this.offset = { x: 0, y: 0 };
+		this.rotationSpeed = 90;
+
+		this.requires("Actor, SpriteAnimation, SprLocOffset, spr_SpikeBallOrigin_02")
+			.attr({ w: (120 * worldScale), h: (120 * worldScale), z: 8000 });
+
+		this.bind("EnterFrame", function(frameData) {
+			// ------ Update_This ------ //
+			if (this.movParent != null) {
+				this.x = this.movParent.x - this.offset.x;
+				this.y = this.movParent.y - this.offset.y;
+			}
+		});
+	},
+});
+
+// ------------- Spike_Ball_HitBox_02 ------------- //
+Crafty.c("Spike_Ball_HitBox_02", {
+	init: function() {
+		this.requires("Actor, collisionDetection, Collision")
+			.attr({ w: (60 * worldScale), h: (60 * worldScale) });
+
+		this.spriteObj = Crafty.e("Spike_Ball_Sprite_02");
+		this.spriteObj.movParent = this;
+		this.spriteObj.setOffset();
+		this.spriteObj.origin("center");
+
+		this.onHit("PC", function(collData) {
+			var curObj = collData[0].obj;
+			curObj.die();
+		}, function() {
+			// 
+		});
+
+		this.bind("EnterFrame", function(frameData) {
+			// Apply spriteObj rotation
+			this.spriteObj.rotation += this.spriteObj.rotationSpeed * (frameData.dt/1000);
+		});
+	},
+});
+
+// ------------- Spike_Ball_02 ------------- //
+Crafty.c("Spike_Ball_02", {
+	init: function() {
+		this.requires("Actor, Color")
+			.attr({ w: 2, h: 2 });
+		this.color("rgb(50, 25, 200)")
+		this.resetPosCoords = { x: 0, y: 0};
+		this.rotationDir = "clockwise"; // clockwise, counterClockwise
+		this.rotationSpeed = 3; // multiplier
+		this.curRotationAngle = 0;
+		this.radius = 90;
+		this.curRotPoint = { x: 0, y: 0};
+		this.nextRotPoint = { x: 0, y: 0};
+
+		this.spikeBall = Crafty.e("Spike_Ball_HitBox_02");
+		this.spikeBallOrigin = Crafty.e("spr_SpikeBallOrigin_Sprite_02");
+
+		this.bind("KeyDown", function(e) {
+			if (e.key == Crafty.keys.Q) {
+				this.resetPos();
+			}
+		});
+
+		this.bind("EnterFrame", function(frameData) {
+			// ---- Calculate_Rotation_Point ---- //
+			// x' = (x-u) cos(beta) - (y-v) sin(beta) + u
+			// y' = (x-u) sin(beta) + (y-v) cos(beta) + v 
+
+			this.curRotationAngle += this.rotationSpeed * (frameData.dt/1000);
+			this.nextRotPoint.x = (this.curRotPoint.x - this.x) * Math.cos(this.curRotationAngle) - (this.curRotPoint.y - this.y) * Math.sin(this.curRotationAngle) + this.x;
+			this.nextRotPoint.y = (this.curRotPoint.x - this.x) * Math.sin(this.curRotationAngle) + (this.curRotPoint.y - this.y) * Math.cos(this.curRotationAngle) + this.y;
+
+			// ---- Update_spikeBall ---- //
+			this.spikeBall.x = this.nextRotPoint.x - this.spikeBall.w/2;
+			this.spikeBall.y = this.nextRotPoint.y - this.spikeBall.h/2;
+
+			// ---- Update_spikeBallChains ---- //
+			this.spikeBallOrigin.x = this.x - (this.spikeBallOrigin.w/2);
+			this.spikeBallOrigin.y = this.y - (this.spikeBallOrigin.h/2);
+		});
+	},
+
+	setProperties: function(propertiesIn) {
+		if (propertiesIn.rotationDir) {
+			this.rotationDir = propertiesIn.rotationDir;
+		} else {
+			this.rotationDir = "clockwise";
+		}
+		if (propertiesIn.rotationSpeed) {
+			this.rotationSpeed = propertiesIn.rotationSpeed;
+		} else {
+			this.rotationSpeed = 3;
+		}
+		this.curRotPoint.x = this.x + this.radius;
+		this.curRotPoint.y = this.y;
+	},
+
+	resetPos: function() {
+		this.x = this.resetPosCoords.x;
+		this.y = this.resetPosCoords.y;
+		this.curRotPoint.x = this.x + this.radius;
+		this.curRotPoint.y = this.y;
+		this.curRotationAngle = 0;
+		this.nextRotPoint.x = this.curRotPoint.x;
+		this.nextRotPoint.y = this.curRotPoint.y;
+	},
+
+	setResetPos: function(xIn, yIn) {
+		this.resetPosCoords.x = xIn;
+		this.resetPosCoords.y = yIn;
 	},
 });
 
@@ -1137,13 +1467,14 @@ Crafty.c("ProjectileShooter", {
 		this.reel("shoot_00r", 1000, 0, 0, 13);
 		this.shootVel = 3;
 		this.direction = "left"; // Recognized: "left", "right", "up", "down"
+		this.shootDelay = 5000; // In ms, time between shots
 
 		this.delay(function() { // Start animation
 			this.animate("shoot_00r", 1);
 			this.delay(function() { // Instance projectile at end of animation
 				this.shootProjectile();
 			}, 700, 0);
-		}, 5000, -1); // Loop infinitely
+		}, this.shootDelay, -1); // Loop infinitely
 	},
 
 	setProperties: function(propertiesIn) {
@@ -1161,7 +1492,12 @@ Crafty.c("ProjectileShooter", {
 		if (propertiesIn.shootVel) {
 			this.shootVel = propertiesIn.shootVel;
 		} else {
-			this.shootVel = 3;
+			this.shootVel = 3; // Default
+		}
+		if (propertiesIn.shootDelay) {
+			this.shootDelay = propertiesIn.shootDelay;
+		} else {
+			this.shootDelay = 5000; // Default
 		}
 	},
 

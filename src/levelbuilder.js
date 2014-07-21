@@ -68,26 +68,34 @@ function initLevel(levelNum) {
 					entitiesList[entitiesListIndex].hitBox.y = (entitiesList[entitiesListIndex].y+entitiesList[entitiesListIndex].h) - 10;
 					entitiesListIndex++;
 					break;
-				// ------ Spike_Ball ------ //
+				// ------ Spike_Ball_01 ------ //
 				case 20: // float
-					entitiesList[entitiesListIndex] = Crafty.e("Spike_Ball")
+					entitiesList[entitiesListIndex] = Crafty.e("Spike_Ball_01")
 						.attr({ x: tileX + (13 * worldScale), y: tileY + (13 * worldScale) });
 					entitiesList[entitiesListIndex].resetPosCoords = { x: tileX + (13 * worldScale), y: tileY + (13 * worldScale) };
 					entitiesList[entitiesListIndex].setProperties({ collType: "float" });
 					entitiesListIndex++;
 					break;
 				case 21: // roll
-					entitiesList[entitiesListIndex] = Crafty.e("Spike_Ball")
+					entitiesList[entitiesListIndex] = Crafty.e("Spike_Ball_01")
 						.attr({ x: tileX + (13 * worldScale), y: tileY + (13 * worldScale) });
 					entitiesList[entitiesListIndex].resetPosCoords = { x: tileX + (13 * worldScale), y: tileY + (13 * worldScale) };
 					entitiesList[entitiesListIndex].setProperties({ collType: "roll" });
 					entitiesListIndex++;
 					break;
 				case 22: // bounce
-					entitiesList[entitiesListIndex] = Crafty.e("Spike_Ball")
+					entitiesList[entitiesListIndex] = Crafty.e("Spike_Ball_01")
 						.attr({ x: tileX + (13 * worldScale), y: tileY + (13 * worldScale) });
 					entitiesList[entitiesListIndex].resetPosCoords = { x: tileX + (13 * worldScale), y: tileY + (13 * worldScale) };
 					entitiesList[entitiesListIndex].setProperties({ collType: "bounce" });
+					entitiesListIndex++;
+					break;
+				// ------ Spike_Ball_02 ------ //
+				case 24: // clockwise
+					entitiesList[entitiesListIndex] = Crafty.e("Spike_Ball_02")
+						.attr({ x: tileX + (tileSize.w/2), y: tileY+(tileSize.h/2) });
+					entitiesList[entitiesListIndex].resetPosCoords = { x: tileX + (tileSize.w/2), y: tileY+(tileSize.h/2) };
+					entitiesList[entitiesListIndex].setProperties({  });
 					entitiesListIndex++;
 					break;
 				// ------ JumpPad ------ //

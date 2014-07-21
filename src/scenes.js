@@ -23,6 +23,10 @@ Crafty.defineScene("loading", function() {
 		"assets/SpikeBall_01.png",
 		"assets/JumpPad_01.png",
 		"assets/ProjectileShooter_01.png",
+		"assets/Projectile_01.png",
+		"assets/dust_01.png",
+		"assets/SpikeBall_02.png",
+		"assets/SpikeBallOrigin_02.png",
 		], function(){ // Things to do after all files have been loaded
 			
 			// -------- Define_Sprite_Maps -------- //
@@ -55,6 +59,13 @@ Crafty.defineScene("loading", function() {
 			Crafty.sprite(200, 200, "assets/SpikeBall_01.png", {
 				spr_spikeBall_01: [0, 0]
 			});
+			// ---- SpikeBall_02 ---- //
+			Crafty.sprite(200, 200, "assets/SpikeBall_02.png", {
+				spr_spikeBall_02: [0, 0]
+			});
+			Crafty.sprite(200, 200, "assets/SpikeBallOrigin_02.png", {
+				spr_SpikeBallOrigin_02: [0, 0]
+			});
 			// ---- JumpPad_01 ---- //
 			Crafty.sprite(96, 96, "assets/JumpPad_01.png", {
 				spr_jumpPad_01: [0, 0]
@@ -66,6 +77,11 @@ Crafty.defineScene("loading", function() {
 			// ---- Projectile_01 ---- //
 			Crafty.sprite(200, 200, "assets/Projectile_01.png", {
 				spr_projectile_01: [0, 0]
+			});
+
+			// ---- General_Effects ---- //
+			Crafty.sprite(200, 200, "assets/dust_01.png", {
+				spr_dust_01: [0, 0]
 			});
 
 			Crafty.enterScene("Game");
