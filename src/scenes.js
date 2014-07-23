@@ -8,7 +8,7 @@
 
 // -------------------------- Loading_Scene -------------------------- //
 Crafty.defineScene("loading", function() {
-	Crafty.e("text_debug")
+	Crafty.e("Game_Text")
 		.text("Loading...")
 		.attr({ x: 150, y: 120 });
 	Crafty.load([
@@ -27,6 +27,7 @@ Crafty.defineScene("loading", function() {
 		"assets/dust_01.png",
 		"assets/SpikeBall_02.png",
 		"assets/SpikeBallOrigin_02.png",
+		"assets/SpikeBallChain_02.png",
 		], function(){ // Things to do after all files have been loaded
 			
 			// -------- Define_Sprite_Maps -------- //
@@ -66,6 +67,9 @@ Crafty.defineScene("loading", function() {
 			Crafty.sprite(200, 200, "assets/SpikeBallOrigin_02.png", {
 				spr_SpikeBallOrigin_02: [0, 0]
 			});
+			Crafty.sprite(46, 28, "assets/SpikeBallChain_02.png", {
+				spr_SpikeBallChain_02: [0, 0]
+			});
 			// ---- JumpPad_01 ---- //
 			Crafty.sprite(96, 96, "assets/JumpPad_01.png", {
 				spr_jumpPad_01: [0, 0]
@@ -94,15 +98,9 @@ Crafty.defineScene("Game", function() {
 	// ------ Level_To_Instance ------ //
 	initLevel(curLevel);
 
-	// ------------ General_Events_&&_Loops ------------ //
-	// this.bind("EnterFrame", function(frameData) {
-		// 
-	// });
-
-	// ------ Key_inputs ------ //
-	// this.bind("KeyDown", function(e) {
-	// 	if (e.key == Crafty.keys.Q)  {
-	// 		// 
-	// 	}
-	// });
+	this.bind("KeyDown", function(e) {
+		if (e.key == Crafty.keys.G)  {
+			// 
+		}
+	});
 });

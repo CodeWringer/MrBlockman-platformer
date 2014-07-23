@@ -47,8 +47,7 @@ function initLevel(levelNum) {
 				case 3:
 					entitiesList[entitiesListIndex] = Crafty.e("BlockDoor")
 						.attr({ x: tileX, y: (tileY+tileSize.h) - (180 * worldScale) });
-					entitiesList[entitiesListIndex].hitBox.x = entitiesList[entitiesListIndex].x + 5;
-					entitiesList[entitiesListIndex].hitBox.y = (entitiesList[entitiesListIndex].y+entitiesList[entitiesListIndex].h) - 10;
+					entitiesList[entitiesListIndex].setProperties({  });
 					entitiesListIndex++;
 					break;
 				// ------ Hazard_Floor ------ //
@@ -64,8 +63,7 @@ function initLevel(levelNum) {
 				case 6:
 					entitiesList[entitiesListIndex] = Crafty.e("Checkpoint")
 						.attr({ x: tileX, y: (tileY+tileSize.h) - (200 * worldScale) });
-					entitiesList[entitiesListIndex].hitBox.x = entitiesList[entitiesListIndex].x + 5;
-					entitiesList[entitiesListIndex].hitBox.y = (entitiesList[entitiesListIndex].y+entitiesList[entitiesListIndex].h) - 10;
+						entitiesList[entitiesListIndex].setProperties({  });
 					entitiesListIndex++;
 					break;
 				// ------ Spike_Ball_01 ------ //
@@ -92,18 +90,42 @@ function initLevel(levelNum) {
 					break;
 				// ------ Spike_Ball_02 ------ //
 				case 24: // clockwise
+					addSolidBlock(tileX, tileY);
 					entitiesList[entitiesListIndex] = Crafty.e("Spike_Ball_02")
 						.attr({ x: tileX + (tileSize.w/2), y: tileY+(tileSize.h/2) });
 					entitiesList[entitiesListIndex].resetPosCoords = { x: tileX + (tileSize.w/2), y: tileY+(tileSize.h/2) };
-					entitiesList[entitiesListIndex].setProperties({  });
+					entitiesList[entitiesListIndex].setProperties({ rotationDir: "clockwise" });
+					entitiesListIndex++;
+					break;
+				case 25: // counterClockwise
+					addSolidBlock(tileX, tileY);
+					entitiesList[entitiesListIndex] = Crafty.e("Spike_Ball_02")
+						.attr({ x: tileX + (tileSize.w/2), y: tileY+(tileSize.h/2) });
+					entitiesList[entitiesListIndex].resetPosCoords = { x: tileX + (tileSize.w/2), y: tileY+(tileSize.h/2) };
+					entitiesList[entitiesListIndex].setProperties({ rotationDir: "counterClockwise" });
+					entitiesListIndex++;
+					break;
+				case 26: // clockwise, longer chain
+					addSolidBlock(tileX, tileY);
+					entitiesList[entitiesListIndex] = Crafty.e("Spike_Ball_02")
+						.attr({ x: tileX + (tileSize.w/2), y: tileY+(tileSize.h/2) });
+					entitiesList[entitiesListIndex].resetPosCoords = { x: tileX + (tileSize.w/2), y: tileY+(tileSize.h/2) };
+					entitiesList[entitiesListIndex].setProperties({ rotationDir: "clockwise", radiusMultiplier: 2 });
+					entitiesListIndex++;
+					break;
+				case 27: // counterClockwise, longer chain
+					addSolidBlock(tileX, tileY);
+					entitiesList[entitiesListIndex] = Crafty.e("Spike_Ball_02")
+						.attr({ x: tileX + (tileSize.w/2), y: tileY+(tileSize.h/2) });
+					entitiesList[entitiesListIndex].resetPosCoords = { x: tileX + (tileSize.w/2), y: tileY+(tileSize.h/2) };
+					entitiesList[entitiesListIndex].setProperties({ rotationDir: "counterClockwise", radiusMultiplier: 2 });
 					entitiesListIndex++;
 					break;
 				// ------ JumpPad ------ //
 				case 8:
 					entitiesList[entitiesListIndex] = Crafty.e("JumpPad")
 						.attr({ x: tileX, y: tileY , w: tileSize.w, h: tileSize.h });
-					entitiesList[entitiesListIndex].hitBox.x = entitiesList[entitiesListIndex].x + 5;
-					entitiesList[entitiesListIndex].hitBox.y = (entitiesList[entitiesListIndex].y+entitiesList[entitiesListIndex].h) - 10;
+						entitiesList[entitiesListIndex].setProperties({  });
 					entitiesListIndex++;
 					break;
 				// ------ ProjectileShooter ------ //
@@ -146,7 +168,7 @@ function initLevel(levelNum) {
 	setSolidsAppearance("brick");
 
 	Game.bindViewport(PC);
-	worldGravity = mapProperties[curLevel][0];
+	// worldGravity = mapProperties[curLevel][0];
 	console.log("Current level: " + curLevel);
 };
 
