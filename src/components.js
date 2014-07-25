@@ -10,9 +10,13 @@
 
 // ------------- collisionDetection ------------- //
 Crafty.c("collisionDetection", {
-	updateBroadphasebox: function() {
-		var xVel = this.curVel.x;
-		var yVel = this.curVel.y;
+	init: function() {
+		this.lastCollisionObj = "floor";
+	},
+
+	updateBroadphasebox: function(milliDT) {
+		var xVel = this.curVel.x * milliDT;
+		var yVel = this.curVel.y * milliDT;
 		this.broadphasebox.x = xVel >= 0 ? this.x + xVel : this.x + xVel*2;
 		this.broadphasebox.y = yVel >= 0 ? this.y + yVel : this.y + yVel*2;
 		this.broadphasebox.w = xVel >= 0 ? this.w + xVel : this.w - xVel;
@@ -21,13 +25,13 @@ Crafty.c("collisionDetection", {
 
 	// Attempts to predict this object's location in the next frame and prevent collisions beforehand
 	// Uses the swept method, to deal with very fast objects
-	checkCollisionSweptAABB: function(obj) {
+	checkCollisionSweptAABB: function(obj, milliDT) {
 		// Declare vars
-		var xVel = this.curVel.x;
-		var yVel = this.curVel.y;
+		var xVel = this.curVel.x * milliDT;
+		var yVel = this.curVel.y * milliDT;
 
-		var xNext = this.x + xVel;
-		var yNext = this.y + yVel;
+		var xNext = this.x + xVel * milliDT;
+		var yNext = this.y + yVel * milliDT;
 
 		// Find entry and exit points on both axes
 		var xEntry = xVel > 0 ? obj.x : obj.x + obj.w;
@@ -72,10 +76,12 @@ Crafty.c("collisionDetection", {
 				if (yLinF0 >= objT && yLinF0 <= objB || yLinF1 >= objT && yLinF1 <= objB || yLinF3 >= objT && yLinF3 <= objB) { // Coming from the left
 					if (obj.isWallL) {
 						this.respondToCollision(obj, "isWallL");
+						this.lastCollisionObj = "wallL";
 					}
 				} else if (xLinF2 >= objL && xLinF2 <= objR || xLinF1 >= objL && xLinF1 <= objR) { // Coming from above
 					if (obj.isFloor) {
 						this.respondToCollision(obj, "isFloor");
+						this.lastCollisionObj = "floor";
 					}
 				}
 			} else if (yVel < 0) { // up
@@ -95,10 +101,12 @@ Crafty.c("collisionDetection", {
 				if (yLinF1 >= objT && yLinF1 <= objB || yLinF2 >= objT && yLinF2 <= objB || yLinF3 >= objT && yLinF3 <= objB) { // Coming from the left
 					if (obj.isWallL) {
 						this.respondToCollision(obj, "isWallL");
+						this.lastCollisionObj = "wallL";
 					}
 				} else if (xLinF0 >= objL && xLinF0 <= objR || xLinF1 >= objL && xLinF1 <= objR) { // Coming from below
 					if (obj.isCeiling) {
 						this.respondToCollision(obj, "isCeiling");
+						this.lastCollisionObj = "ceiling";
 					}
 				}
 			} else if (yVel == 0) {
@@ -113,6 +121,7 @@ Crafty.c("collisionDetection", {
 				if (yLinF0 >= objT && yLinF0 <= objB || yLinF1 >= objT && yLinF1 <= objB) { // Coming from the left
 					if (obj.isWallL) {
 						this.respondToCollision(obj, "isWallL");
+						this.lastCollisionObj = "wallL";
 					}
 				}
 			}
@@ -134,10 +143,12 @@ Crafty.c("collisionDetection", {
 				if (yLinF0 >= objT && yLinF0 <= objB || yLinF1 >= objT && yLinF1 <= objB || yLinF3 >= objT && yLinF3 <= objB) { // Coming from the right
 					if (obj.isWallR) {
 						this.respondToCollision(obj, "isWallR");
+						this.lastCollisionObj = "wallR";
 					}
 				} else if (xLinF2 >= objL && xLinF2 <= objR || xLinF1 >= objL && xLinF1 <= objR) { // Coming from above
 					if (obj.isFloor) {
 						this.respondToCollision(obj, "isFloor");
+						this.lastCollisionObj = "floor";
 					}
 				}
 			} else if (yVel < 0) { // up
@@ -157,10 +168,12 @@ Crafty.c("collisionDetection", {
 				if (yLinF2 >= objT && yLinF2 <= objB || yLinF1 >= objT && yLinF1 <= objB || yLinF3 >= objT && yLinF3 <= objB) { // Coming from the right
 					if (obj.isWallR) {
 						this.respondToCollision(obj, "isWallR");
+						this.lastCollisionObj = "wallR";
 					}
 				} else if (xLinF0 >= objL && xLinF0 <= objR || xLinF1 >= objL && xLinF1 <= objR) { // Coming from below
 					if (obj.isCeiling) {
 						this.respondToCollision(obj, "isCeiling");
+						this.lastCollisionObj = "ceiling";
 					}
 				}
 			} else if (yVel == 0) {
@@ -175,6 +188,7 @@ Crafty.c("collisionDetection", {
 				if (yLinF0 >= objT && yLinF0 <= objB || yLinF1 >= objT && yLinF1 <= objB) { // Coming from the left
 					if (obj.isWallR) {
 						this.respondToCollision(obj, "isWallR");
+						this.lastCollisionObj = "wallR";
 					}
 				}
 			}
@@ -185,6 +199,7 @@ Crafty.c("collisionDetection", {
 				if (r-2 >= objL && l+2 <= objR) { // Coming from above
 					if (obj.isFloor) {
 						this.respondToCollision(obj, "isFloor");
+						this.lastCollisionObj = "floor";
 					}
 				}
 			} else if (yVel < 0) {
@@ -193,19 +208,20 @@ Crafty.c("collisionDetection", {
 				if (r-2 >= objL && l+2 <= objR) { // Coming from below
 					if (obj.isCeiling) {
 						this.respondToCollision(obj, "isCeiling");
+						this.lastCollisionObj = "ceiling";
 					}
 				}
 			}
 		}
 	},
 
-	checkCollisionSweptRamp: function(obj) {
+	checkCollisionSweptRamp: function(obj, milliDT) {
 		// Declare vars
-		var xVel = this.curVel.x;
-		var yVel = this.curVel.y;
+		var xVel = this.curVel.x * milliDT;
+		var yVel = this.curVel.y * milliDT;
 
-		var xNext = this.x + xVel;
-		var yNext = this.y + yVel;
+		var xNext = this.x + xVel * milliDT;
+		var yNext = this.y + yVel * milliDT;
 
 		var thisR = xNext + this.w,
 			thisB = yNext + this.h;
@@ -218,27 +234,83 @@ Crafty.c("collisionDetection", {
 
 		// Find obj type
 		if (obj.isBL) {
-			if (this.x >= obj.x && this.x <= obj.x + obj.w - 2) {
-				if (thisB > obj.getyLinF(this.x)) {
-					this.respondToCollision(obj, "isRampBL");
+			// ---- X_Axis_Check ---- //
+			if (xNext >= obj.x - 1 && xNext <= obj.x + obj.w + 1) {
+				if (this.lastCollisionObj == "wallR") { // Check if the last collision was with a wall, if so, require additional check before calling respondToCollision
+					// ---- Y_Axis_Check ---- //
+					if (thisB >= obj.y -1 && thisB <= obj.y + obj.h + 1) {
+						// Check against the ramp linear function. (!same functions!)
+						if (thisB > obj.getyLinF(xNext)) {
+							this.respondToCollision(obj, "isRampBL");
+							this.lastCollisionObj = "rampBL";
+						}
+					}
+				} else {
+					// Check against the ramp linear function. (!same functions!)
+					if (thisB > obj.getyLinF(xNext)) {
+						this.respondToCollision(obj, "isRampBL");
+						this.lastCollisionObj = "rampBL";
+					}
 				}
 			}
 		} else if (obj.isBR) {
-			if (thisR >= obj.x + 2 && thisR <= obj.x + obj.w) {
-				if (yNext + this.h > obj.getyLinF(thisR)) {
-					this.respondToCollision(obj, "isRampBR");
+			// ---- X_Axis_Check ---- //
+			if (thisR >= obj.x -1 && thisR <= obj.x + obj.w + 1) {
+				if (this.lastCollisionObj == "wallL") { // Check if the last collision was with a wall, if so, require additional check before calling respondToCollision
+					// ---- Y_Axis_Check ---- //
+					if (thisB >= obj.y -1 && thisB <= obj.y + obj.h + 1) {
+						// Check against the ramp linear function. (!same functions!)
+						if (thisB > obj.getyLinF(thisR)) {
+							this.respondToCollision(obj, "isRampBR");
+							this.lastCollisionObj = "rampBR";
+						}
+					}
+				} else {
+					// Check against the ramp linear function. (!same functions!)
+					if (thisB > obj.getyLinF(thisR)) {
+						this.respondToCollision(obj, "isRampBR");
+						this.lastCollisionObj = "rampBR";
+					}
 				}
 			}
 		} else if (obj.isTL) {
-			if (this.x >= obj.x && this.x < obj.x + obj.w) {
-				if (yNext < obj.getyLinF(xNext)) {
-					this.respondToCollision(obj, "isRampTL");
+			// ---- X_Axis_Check ---- //
+			if (xNext >= obj.x - 1 && xNext <= obj.x + obj.w + 1) {
+				if (this.lastCollisionObj == "wallR") { // Check if the last collision was with a wall, if so, require additional check before calling respondToCollision
+					// ---- Y_Axis_Check ---- //
+					if (this.y >= obj.y -1 && this.y <= obj.y + obj.h + 1) {
+						// Check against the ramp linear function. (!same functions!)
+						if (yNext < obj.getyLinF(xNext)) {
+							this.respondToCollision(obj, "isRampTL");
+							this.lastCollisionObj = "rampTL";
+						}
+					}
+				} else {
+					// Check against the ramp linear function. (!same functions!)
+					if (yNext < obj.getyLinF(xNext)) {
+						this.respondToCollision(obj, "isRampTL");
+						this.lastCollisionObj = "rampTL";
+					}
 				}
 			}
 		} else if (obj.isTR) {
-			if (thisR > obj.x && thisR <= obj.x + obj.w) {
-				if (yNext < obj.getyLinF(thisR)) {
-					this.respondToCollision(obj, "isRampTR");
+			// ---- X_Axis_Check ---- //
+			if (thisR >= obj.x - 1 && thisR <= obj.x + obj.w + 1) {
+				if (this.lastCollisionObj == "wallL") { // Check if the last collision was with a wall, if so, require additional check before calling respondToCollision
+					// ---- Y_Axis_Check ---- //
+					if (this.y >= obj.y -1 && this.y <= obj.y + obj.h + 1) {
+						// Check against the ramp linear function. (!same functions!)
+						if (yNext < obj.getyLinF(thisR)) {
+							this.respondToCollision(obj, "isRampTR");
+							this.lastCollisionObj = "rampTR";
+						}
+					}
+				} else {
+					// Check against the ramp linear function. (!same functions!)
+					if (yNext < obj.getyLinF(thisR)) {
+						this.respondToCollision(obj, "isRampTR");
+						this.lastCollisionObj = "rampTR";
+					}
 				}
 			}
 		}
@@ -430,9 +502,13 @@ Crafty.c("Hazard_Block", {
 	init: function() {
 		this.requires("Actor, Color, Collision")
 			.color("rgb(255, 100, 100)");
-		this.onHit("PC", function(collData) {
-			var curObj = collData[0].obj;
-			curObj.die();
+		this.onHit("PC", function(collData1) {
+			collData1[0].obj.die();
+		}, function() {
+			// 
+		});
+		this.onHit("Spike_Ball_01", function(collData2) {
+			collData2[0].obj.die();
 		}, function() {
 			// 
 		});
@@ -476,11 +552,11 @@ Crafty.c("PC_Sprite", {
 // ------------- Player_Character ------------- //
 Crafty.c("PC", {
 	init: function() {
-		this.movSpeed = (40 * worldScale);
-		this.maxVel = (10 * worldScale);
-		this.jumpImpulse = (-12.5 * worldScale);
-		this.velSlow = (2 * worldScale);		//How quickly velocity decreases when collidedD, higher values are slower
-		this.velSlowAir = (20 * worldScale); 	//How quickly velocity decreases when !collidedD, higher values are slower
+		this.maxVel = (300 * worldScale);
+		this.accelSpeed = (this.maxVel * 2.6);
+		this.decelSpeed = (this.maxVel * 3.6);
+		
+		this.jumpImpulse = (-450 * worldScale);
 		this.curVel = { x: 0, y: 0 };
 		this.broadphasebox = {x: 0, y: 0, w: 0, h: 0 };
 		this.lastDir = "right";
@@ -497,11 +573,11 @@ Crafty.c("PC", {
 		this.spriteObj.movParent = this;
 		this.spriteObj.setOffset();
 
-		this.deathEmitter = Crafty.e("ParticleEmitter");
+		this.deathEmitter = Crafty.e("Particle_Emitter");
 		this.deathEmitter.movParent = this;
 		this.deathEmitter.posOffset = {x: this.w/2, y: this.h/2};
 
-		this.feetDustEmitter = Crafty.e("ParticleEmitter");
+		this.feetDustEmitter = Crafty.e("Particle_Emitter");
 		this.feetDustEmitter.movParent = this;
 		this.feetDustEmitter.posOffset = {x: this.w/2, y: this.h-5};
 
@@ -557,48 +633,34 @@ Crafty.c("PC", {
 		});
 
 		this.bind("EnterFrame", function(frameData) {
+			this.milliDT = (frameData.dt/1000);
 			// ------ PC_Movement ------ //
 			if (!this.isDead) {
-				if (this.isDown("A")) { //Moving left
-					if (this.curVel.x > -this.maxVel) {
-						this.curVel.x -= this.movSpeed / frameData.dt;
+				if (this.isDown("A")) { // Moving left
+					if (this.curVel > 0) { // Still moving right
+						this.curVel.x = 0;
+					} else if (this.curVel.x > -this.maxVel) { // If maxVel has not yet been reached, keep increasing curVel
+						this.curVel.x -= this.decelSpeed * this.milliDT;
 					}
-				} else if (this.isDown("D")) { //Moving right
-					if (this.curVel.x < this.maxVel) {
-						this.curVel.x += this.movSpeed / frameData.dt;
+				} else if (this.isDown("D")) { // Moving right
+					if (this.curVel < 0) { // Still moving left
+						this.curVel.x = 0;
+					} else if (this.curVel.x < this.maxVel) { // If maxVel has not yet been reached, keep increasing curVel
+						this.curVel.x -= -this.decelSpeed * this.milliDT;
 					}
-				}
-
-				// ----- velocity_x ----- //
-				if (this.curVel.x < -0.1) {
-					this.curVel.x += (this.movSpeed/2) / frameData.dt;
-				} else if (this.curVel.x > 0.1) {
-					this.curVel.x -= (this.movSpeed/2) / frameData.dt;
 				} else {
-					this.curVel.x = 0;
+					// ----- X_Velocity_Decrease ----- //
+					if (this.curVel.x < -1) { // Moving left
+						this.curVel.x += this.decelSpeed * this.milliDT;
+					} else if (this.curVel.x > 1) { // Moving right
+						this.curVel.x -= this.decelSpeed * this.milliDT;
+					} else {
+						this.curVel.x = 0;
+					}
 				}
 				
-				// ----- velocity_y ----- //
-				this.curVel.y += (worldGravity * worldScale) * frameData.dt/2; //Gravity
-
-				// ---- Collision_Detection ---- //
-				this.updateBroadphasebox();
-				for (var i = solidBlockList.length-1; i > -1; --i) {
-					var tile = solidBlockList[i];
-					if (tile.x+tile.w > this.broadphasebox.x && tile.x < this.broadphasebox.x+this.broadphasebox.w) {
-						if (tile.y+tile.h > this.broadphasebox.y && tile.y < this.broadphasebox.y+this.broadphasebox.h) {
-							this.checkCollisionSweptAABB(tile);
-						}
-					}
-				}
-				for (var i = solidRampList.length-1; i > -1; --i) {
-					var rampTile = solidRampList[i];
-					if (rampTile.x+rampTile.w > this.broadphasebox.x && rampTile.x < this.broadphasebox.x+this.broadphasebox.w) {
-						if (rampTile.y+rampTile.h > this.broadphasebox.y && rampTile.y < this.broadphasebox.y+this.broadphasebox.h) {
-							this.checkCollisionSweptRamp(rampTile);
-						}
-					}
-				}
+				// ----- Y_Velocity_Decrease ----- //
+				this.curVel.y += (worldGravity * worldScale) * this.milliDT; // Gravity
 
 				// ------ Set_Last_Movement_Direction ------ //
 				if (this.curVel.x > 0) {
@@ -606,6 +668,26 @@ Crafty.c("PC", {
 				} else if (this.curVel.x < 0) {
 					this.lastDir = "left";
 				}
+
+				// ---- Collision_Detection ---- //
+				this.updateBroadphasebox(this.milliDT);
+				for (var i = solidBlockList.length-1; i > -1; --i) {
+					var tile = solidBlockList[i];
+					if (tile.x+tile.w > this.broadphasebox.x && tile.x < this.broadphasebox.x+this.broadphasebox.w) {
+						if (tile.y+tile.h > this.broadphasebox.y && tile.y < this.broadphasebox.y+this.broadphasebox.h) {
+							this.checkCollisionSweptAABB(tile, this.milliDT);
+						}
+					}
+				}
+				for (var i = solidRampList.length-1; i > -1; --i) {
+					var rampTile = solidRampList[i];
+					if (rampTile.x+rampTile.w > this.broadphasebox.x && rampTile.x < this.broadphasebox.x+this.broadphasebox.w) {
+						if (rampTile.y+rampTile.h > this.broadphasebox.y && rampTile.y < this.broadphasebox.y+this.broadphasebox.h) {
+							this.checkCollisionSweptRamp(rampTile, this.milliDT);
+						}
+					}
+				}
+
 				// ------ Play_Animations ------ //
 				if (collidedD && !this.spriteObj.isPlaying("PC_Jump00r_st") && !this.spriteObj.isPlaying("PC_Jump00l_st")) {
 					if (this.curVel.x > 0 && !this.spriteObj.isPlaying("PC_Run00r")) {
@@ -631,12 +713,12 @@ Crafty.c("PC", {
 			}
 
 			// ------ Update_Hitbox ------ //
-			this.hitBox_down.x = (this.x + 2) + this.curVel.x;
-			this.hitBox_down.y = (this.y + this.h) + this.curVel.y;
+			this.hitBox_down.x = (this.x + 2) + this.curVel.x * this.milliDT;
+			this.hitBox_down.y = (this.y + this.h) + this.curVel.y * this.milliDT;
 
 			// ---- Apply_Velocities ---- //
-			this.x += this.curVel.x;
-			this.y += this.curVel.y;
+			this.x += this.curVel.x * this.milliDT;
+			this.y += this.curVel.y * this.milliDT;
 		});
 	},
 
@@ -658,14 +740,14 @@ Crafty.c("PC", {
 			this.isDead = true;
 			if (this.lastDir == "right") {
 				// Make this float in the opposite direction
-				this.curVel.x = -0.5;
-				this.curVel.y = -1;
+				this.curVel.x = -1400 * this.milliDT;
+				this.curVel.y = -2800 * this.milliDT;
 				// Animate this
 				this.spriteObj.animate("PC_Bloat00r", 1);
 			} else if (this.lastDir == "left") {
 				// Make this float in the opposite direction
-				this.curVel.x = 0.5;
-				this.curVel.y = -1;
+				this.curVel.x = 1400 * this.milliDT;
+				this.curVel.y = -2800 * this.milliDT;
 				// Animate this
 				this.spriteObj.animate("PC_Bloat00l", 1);
 			}
@@ -680,11 +762,12 @@ Crafty.c("PC", {
 			this.delay(function() {
 				this.deathEmitterSettings = { emitW: (40 * worldScale), emitH: (60 * worldScale), emitDir: "randomUpWideBurst", emitStrength: 1, gravityType: "slowFall", emitCollSetting: "noCollide", emitExpire: true, emitLifeTime: 5000, sprite: "spr_PC_Parachute", fadeOutTime: 2000 };
 				this.deathEmitter.emitParticles( this.deathEmitterSettings, 1, 12);
-			}, 650, 0);
+			}, 700, 0);
 			// Delay resetPos
 			this.delay(function() {
 				this.resetPos();
 				this.isDead = false;
+				this.canJump = true;
 			}, 3000, 0);
 		}
 	},
@@ -718,38 +801,38 @@ Crafty.c("PC", {
 			this.curVel.y = 0;
 			this.y = objB;
 		} else if (objDirType == "isFloor") {
-			if (this.curVel.y > 8) {
+			if (this.curVel.y > (400 * worldScale)) {
 				this.feetDustEmitter.emitParticles( this.feetDustEmitterSettings, 1, 5);
 			}
 			this.curVel.y = 0;
 			this.y = objT - this.h;
 
 		} else if (objDirType == "isRampBL") { // Ramps
-			if (this.curVel.y > 8) {
+			if (this.curVel.y > (400 * worldScale)) {
 				this.feetDustEmitter.emitParticles( this.feetDustEmitterSettings, 1, 5);
 			}
 			this.curVel.y = 0;
-			this.y = obj.getyLinF(this.x + this.curVel.x) - this.h;
+			this.y = obj.getyLinF(this.x + this.curVel.x * this.milliDT) - this.h;
 		} else if (objDirType == "isRampBR") {
-			if (this.curVel.y > 8) {
+			if (this.curVel.y > (400 * worldScale)) {
 				this.feetDustEmitter.emitParticles( this.feetDustEmitterSettings, 1, 5);
 			}
 			this.curVel.y = 0;
-			this.y = obj.getyLinF(this.x + this.w + this.curVel.x) - this.h;
+			this.y = obj.getyLinF(this.x + this.w + this.curVel.x * this.milliDT) - this.h;
 		} else if (objDirType == "isRampTL") {
 			this.curVel.y = 0;
-			this.y = obj.getyLinF(this.x + this.curVel.x);
+			this.y = obj.getyLinF(this.x + this.curVel.x * this.milliDT);
 		} else if (objDirType == "isRampTR") {
 			this.curVel.y = 0;
-			this.y = obj.getyLinF(this.x + this.w + this.curVel.x);
+			this.y = obj.getyLinF(this.x + this.w + this.curVel.x * this.milliDT);
 		}
 	},
 });
 
-// ------------- ParticleEmitter ------------- //
+// ------------- Particle_Emitter ------------- //
 var particleList = [];
 var particleListIndex = 0;
-Crafty.c("ParticleEmitter", {
+Crafty.c("Particle_Emitter", {
 	init: function() {
 		this.posOffset = {x: 0, y: 0} ;
 		this.movParent;
@@ -801,26 +884,26 @@ Crafty.c("ParticleEmitter", {
 			if (emitSettingsIn.emitDir != null) {
 				// Find out if emitVelIn.direction is among the list of recognized directions
 				if (emitSettingsIn.emitDir == "randomUpWideBurst") {
-					emitVelOut.x = getRandomArbitrary((0 * emitSettingsIn.emitStrength), (3 * emitSettingsIn.emitStrength));
-					emitVelOut.y = getRandomArbitrary((1 * emitSettingsIn.emitStrength), (2 * emitSettingsIn.emitStrength)) * (-1);
+					emitVelOut.x = getRandomArbitrary((0 * emitSettingsIn.emitStrength), (120 * emitSettingsIn.emitStrength));
+					emitVelOut.y = getRandomArbitrary((120 * emitSettingsIn.emitStrength), (150 * emitSettingsIn.emitStrength)) * (-1);
 					if (Math.random() < 0.5) {
-						emitVelOut.x = emitVelOut.x * (-1);
+						emitVelOut.x *= (-1);
 					}
 				} else if (emitSettingsIn.emitDir == "randomUpNarrowBurst") {
-					emitVelOut.x = getRandomArbitrary((0 * emitSettingsIn.emitStrength), (1 * emitSettingsIn.emitStrength));
-					emitVelOut.y = getRandomArbitrary((1 * emitSettingsIn.emitStrength), (2 * emitSettingsIn.emitStrength)) * (-1);
+					emitVelOut.x = getRandomArbitrary((0 * emitSettingsIn.emitStrength), (60 * emitSettingsIn.emitStrength));
+					emitVelOut.y = getRandomArbitrary((120 * emitSettingsIn.emitStrength), (150 * emitSettingsIn.emitStrength)) * (-1);
 					if (Math.random() < 0.5) {
 						emitVelOut.x = emitVelOut.x * (-1);
 					}
 				} else if (emitSettingsIn.emitDir == "randomHorizontalBurst") {
-					emitVelOut.x = getRandomArbitrary((1 * emitSettingsIn.emitStrength), (3 * emitSettingsIn.emitStrength));
+					emitVelOut.x = getRandomArbitrary((60 * emitSettingsIn.emitStrength), (80 * emitSettingsIn.emitStrength));
 					emitVelOut.y = getRandomArbitrary(0, 1) * (-1);
 					if (Math.random() < 0.5) {
 						emitVelOut.x = emitVelOut.x * (-1);
 					}
 				} else if (emitSettingsIn.emitDir == "randomVerticalBurst") {
 					emitVelOut.x = getRandomArbitrary(0, 1);
-					emitVelOut.y = getRandomArbitrary((1 * emitSettingsIn.emitStrength), (3 * emitSettingsIn.emitStrength));
+					emitVelOut.y = getRandomArbitrary((60 * emitSettingsIn.emitStrength), (80 * emitSettingsIn.emitStrength));
 					if (Math.random() < 0.5) {
 						emitVelOut.y = emitVelOut.y * (-1);
 					}
@@ -875,26 +958,27 @@ Crafty.c("Particle", {
 		this.origin("center");
 
 		this.bind("EnterFrame", function(frameData) {
+			this.milliDT = (frameData.dt/1000);
 			// ---- Initial_Fade_In ---- //
 			if (this.fadeInTime > 0) {
 				this.framesToFadeIn = (this.fadeInTimeInitial / frameData.dt);
 				this.alpha += (1 / this.framesToFadeIn);
-				this.fadeInTime -= 1000 * (frameData.dt/1000);
+				this.fadeInTime -= 1000 * this.milliDT;
 			}
 
 			// --------- Velocity_Changes --------- //
 			if (this.gravityType == "slowFall") {
 				// ----- Velocity_x ----- //
 				if (this.curVel.x < -0.1) {
-					this.curVel.x += this.velSlow * (frameData.dt/1000);
+					this.curVel.x += this.velSlow * this.milliDT;
 				} else if (this.curVel.x > 0.1) {
-					this.curVel.x -= this.velSlow * (frameData.dt/1000);
+					this.curVel.x -= this.velSlow * this.milliDT;
 				} else {
 					this.curVel.x = 0;
 				}
 				// ----- Velocity_y ----- //
-				if (this.curVel.y < 1) {
-					this.curVel.y += worldGravity*50 * (frameData.dt/1000);
+				if (this.curVel.y < 40) {
+					this.curVel.y += (worldGravity/4 * worldScale) * this.milliDT; // Gravity
 				}
 			} else if (this.gravityType == "decelerate") {
 				// ----- Velocity_x ----- //
@@ -904,17 +988,17 @@ Crafty.c("Particle", {
 			}
 
 			// ---- Apply_Velocities ---- //
-			this.x += this.curVel.x;
-			this.y += this.curVel.y;
+			this.x += this.curVel.x * this.milliDT;
+			this.y += this.curVel.y * this.milliDT;
 
 			// --------- LifeTime --------- //
 			if (this.expire == true && this.fadeInTime <= 0) {
-				this.lifeTime -= 1000 * (frameData.dt/1000);
+				this.lifeTime -= 1000 * this.milliDT;
 				if (this.lifeTime <= 0) {
 					// ---- Fade_Out ---- //
 					this.framesToFadeOut = (this.fadeOutTimeInitial / frameData.dt);
 					this.alpha -= (1 / this.framesToFadeOut);
-					this.fadeOutTime -= 1000 * (frameData.dt/1000);
+					this.fadeOutTime -= 1000 * this.milliDT;
 					if (this.fadeOutTime <= 0) {
 						this.destroy();
 					}
@@ -922,7 +1006,7 @@ Crafty.c("Particle", {
 			}
 
 			// --------- rotation --------- //
-			this.rotation += this.rotationSpeed * (frameData.dt/1000);
+			this.rotation += this.rotationSpeed * this.milliDT;
 		});
 	},
 
@@ -1043,7 +1127,7 @@ Crafty.c("Spike_Ball_Sprite_01", {
 		this.rotationSpeed = 90;
 
 		this.requires("Actor, SpriteAnimation, SprLocOffset, spr_spikeBall_01")
-			.attr({ w: (150 * worldScale), h: (150 * worldScale), z: 8000 });
+			.attr({ w: (150 * worldScale), h: (150 * worldScale), z: 5000 });
 
 		this.bind("EnterFrame", function(frameData) {
 			// ------ Update_This ------ //
@@ -1058,21 +1142,25 @@ Crafty.c("Spike_Ball_Sprite_01", {
 // ------------- Spike_Ball_01 ------------- //
 Crafty.c("Spike_Ball_01", {
 	init: function() {
-		this.requires("Actor, collisionDetection, Collision")
+		this.requires("Actor, Delay, collisionDetection, Collision")
 			.attr({ w: (70 * worldScale), h: (70 * worldScale) });
-		this.curVel = { x: 2, y: 0 };
-		this.resetVel = { x: 2, y: 0 };
+		this.curVel = { x: 0, y: 0 };
+		this.resetVel = { x: 0, y: 0 };
 		this.resetPosCoords = { x: 0, y: 0};
 		this.broadphasebox = {x: 0, y: 0, w: 0, h: 0 };
 		this.collType = "float"; // Allowed: float, roll, bounce
-		this.bounceImpulse = -12;
+		this.bounceImpulse = -600;
+		this.isDead = false;
+
+		this.postImpactVel = { x: 0, y: 0 };
+		this.hasImpacted = false; // Used for rolling, when first instanced, it waits for the first collision to happen before applying x velocities
 
 		this.spriteObj = Crafty.e("Spike_Ball_Sprite_01");
 		this.spriteObj.movParent = this;
 		this.spriteObj.setOffset();
 		this.spriteObj.origin("center");
 
-		this.dustEmitter = Crafty.e("ParticleEmitter");
+		this.dustEmitter = Crafty.e("Particle_Emitter");
 		this.dustEmitter.movParent = this;
 		this.dustEmitter.posOffset = {x: 0, y: 0};
 
@@ -1090,18 +1178,19 @@ Crafty.c("Spike_Ball_01", {
 		});
 
 		this.bind("EnterFrame", function(frameData) {
+			this.milliDT = (frameData.dt/1000);
 			// ----- velocity_y ----- //
 			if (this.collType == "roll" || this.collType == "bounce") {
-				this.curVel.y += (worldGravity * worldScale) * frameData.dt/2; //Gravity
+				this.curVel.y += (worldGravity * worldScale) * this.milliDT; //Gravity
 			}
 
 			// ---- Collision_Detection ---- //
-			this.updateBroadphasebox();
+			this.updateBroadphasebox(this.milliDT);
 			for (var i = solidBlockList.length-1; i > -1; --i) {
 				var tile = solidBlockList[i];
 				if (tile.x+tile.w > this.broadphasebox.x && tile.x < this.broadphasebox.x+this.broadphasebox.w) {
 					if (tile.y+tile.h > this.broadphasebox.y && tile.y < this.broadphasebox.y+this.broadphasebox.h) {
-						this.checkCollisionSweptAABB(tile);
+						this.checkCollisionSweptAABB(tile, this.milliDT);
 					}
 				}
 			}
@@ -1109,7 +1198,7 @@ Crafty.c("Spike_Ball_01", {
 				var rampTile = solidRampList[i];
 				if (rampTile.x+rampTile.w > this.broadphasebox.x && rampTile.x < this.broadphasebox.x+this.broadphasebox.w) {
 					if (rampTile.y+rampTile.h > this.broadphasebox.y && rampTile.y < this.broadphasebox.y+this.broadphasebox.h) {
-						this.checkCollisionSweptRamp(rampTile);
+						this.checkCollisionSweptRamp(rampTile, this.milliDT);
 					}
 				}
 			}
@@ -1117,29 +1206,27 @@ Crafty.c("Spike_Ball_01", {
 			// Apply spriteObj rotation
 			if (this.collType == "float") {
 				if (this.curVel.x > 0 || this.curVel.y < 0) {
-					this.spriteObj.rotation += this.spriteObj.rotationSpeed * (frameData.dt/1000);
+					this.spriteObj.rotation += this.spriteObj.rotationSpeed * this.milliDT;
 				} else if (this.curVel.x < 0 || this.curVel.y > 0) {
-					this.spriteObj.rotation -= this.spriteObj.rotationSpeed * (frameData.dt/1000);
+					this.spriteObj.rotation -= this.spriteObj.rotationSpeed * this.milliDT;
 				}
 			} else if (this.collType == "roll") {
-				if (this.curVel.x > 0 || this.curVel.y > 0) {
-					this.spriteObj.rotation += this.spriteObj.rotationSpeed * (frameData.dt/1000);
-				} else if (this.curVel.x < 0 || this.curVel.y < 0) {
-					this.spriteObj.rotation -= this.spriteObj.rotationSpeed * (frameData.dt/1000);
+				if (this.curVel.x > 0) {
+					this.spriteObj.rotation += this.spriteObj.rotationSpeed*2 * this.milliDT;
+				} else if (this.curVel.x < 0) {
+					this.spriteObj.rotation -= this.spriteObj.rotationSpeed*2 * this.milliDT;
 				}
 			} else if (this.collType == "bounce") {
 				if (this.curVel.x > 0) {
-					this.spriteObj.rotation += this.spriteObj.rotationSpeed * (frameData.dt/1000);
+					this.spriteObj.rotation += this.spriteObj.rotationSpeed * this.milliDT;
 				} else if (this.curVel.x < 0) {
-					this.spriteObj.rotation -= this.spriteObj.rotationSpeed * (frameData.dt/1000);
+					this.spriteObj.rotation -= this.spriteObj.rotationSpeed * this.milliDT;
 				}
 			}
-			
-			
 
 			// Apply velocities
-			this.x += (this.curVel.x * worldScale);
-			this.y += (this.curVel.y * worldScale);
+			this.x += (this.curVel.x * worldScale) * this.milliDT;
+			this.y += (this.curVel.y * worldScale) * this.milliDT;
 		});
 	},
 
@@ -1154,11 +1241,6 @@ Crafty.c("Spike_Ball_01", {
 			this.curVel.y = propertiesIn.velocity.y;
 			this.resetVel.x = propertiesIn.velocity.x;
 			this.resetVel.y = propertiesIn.velocity.y;
-		} else {
-			this.curVel.x = 2;
-			this.curVel.y = 0;
-			this.resetVel.x = 2;
-			this.resetVel.y = 0;
 		}
 	},
 
@@ -1176,6 +1258,17 @@ Crafty.c("Spike_Ball_01", {
 		this.resetVel.y = this.curVel.y;
 	},
 
+	die: function() {
+		if (!this.isDead) {
+			this.delay(function() {
+				this.spriteObj.destroy();
+				this.dustEmitter.destroy();
+				this.destroy();
+			}, 500, 0);
+		}
+		this.isDead = true;
+	},
+
 	respondToCollision: function(obj, objDirType) {
 		var objL = obj.x,
 			objR = obj.x + obj.w,
@@ -1187,6 +1280,14 @@ Crafty.c("Spike_Ball_01", {
 
 		this.dustEmitCount = 3;
 		this.dustEmitterSettings = { emitW: (60 * worldScale), emitH: (60 * worldScale), emitDir: "randomVerticalBurst", rotationSpeed: 45, emitStrength: 1, gravityType: "decelerate", emitCollSetting: "noCollide", emitExpire: true, emitLifeTime: 500, sprite: "spr_dust_01", fadeInTime: 500, fadeOutTime: 800 };
+		// Special case check for rolling spikeBalls, they should only start rolling as soon as they hit the floor
+		if (this.collType == "roll") {
+			if (this.hasImpacted == false) {
+				this.curVel.x = this.postImpactVel.x;
+				this.hasImpacted = true;
+			}
+		}
+
 		// ---- Wall_L ---- //
 		if (objDirType == "isWallL") { // SolidBlocks
 			this.curVel.x = -xVel;
@@ -1233,7 +1334,7 @@ Crafty.c("Spike_Ball_01", {
 				this.dustEmitterSettings.emitDir = "randomHorizontalBurst";
 				this.dustEmitter.emitParticles( this.dustEmitterSettings, 1, this.dustEmitCount);
 			} else if (this.collType == "roll") {
-				if (yVel > 6) {
+				if (yVel > 400) {
 					this.dustEmitter.posOffset = {x: this.w/2, y: this.h};
 					this.dustEmitterSettings.emitDir = "randomHorizontalBurst";
 					this.dustEmitter.emitParticles( this.dustEmitterSettings, 1, this.dustEmitCount);
@@ -1264,7 +1365,7 @@ Crafty.c("Spike_Ball_01", {
 						this.curVel.x = -xVel;
 					}
 				}
-				if (yVel > 6) {
+				if (yVel > 400) {
 					this.dustEmitter.posOffset = {x: 0, y: this.h};
 					this.dustEmitterSettings.emitDir = "randomHorizontalBurst";
 					this.dustEmitter.emitParticles( this.dustEmitterSettings, 1, this.dustEmitCount);
@@ -1280,7 +1381,7 @@ Crafty.c("Spike_Ball_01", {
 				this.dustEmitterSettings.emitDir = "randomHorizontalBurst";
 				this.dustEmitter.emitParticles( this.dustEmitterSettings, 1, this.dustEmitCount);
 			}
-			this.y = obj.getyLinF(this.x) - this.h;
+			this.y = obj.getyLinF(this.x + this.curVel.x * this.milliDT) - this.h;
 		// ---- Ramp_BR ---- //
 		} else if (objDirType == "isRampBR") {
 			if (this.collType == "float") {
@@ -1296,7 +1397,7 @@ Crafty.c("Spike_Ball_01", {
 						this.curVel.x = -xVel;
 					}
 				}
-				if (yVel > 6) {
+				if (yVel > 400) {
 					this.dustEmitter.posOffset = {x: this.w, y: this.h};
 					this.dustEmitterSettings.emitDir = "randomHorizontalBurst";
 					this.dustEmitter.emitParticles( this.dustEmitterSettings, 1, this.dustEmitCount);
@@ -1312,7 +1413,7 @@ Crafty.c("Spike_Ball_01", {
 				this.dustEmitterSettings.emitDir = "randomHorizontalBurst";
 				this.dustEmitter.emitParticles( this.dustEmitterSettings, 1, this.dustEmitCount);
 			}
-			this.y = obj.getyLinF(this.x + this.w) - this.h;
+			this.y = obj.getyLinF(this.x + this.w + this.curVel.x * this.milliDT) - this.h;
 		// ---- Ramp_TL ---- //
 		} else if (objDirType == "isRampTL") {
 			if (this.collType == "float") {
@@ -1332,7 +1433,7 @@ Crafty.c("Spike_Ball_01", {
 				this.dustEmitterSettings.emitDir = "randomHorizontalBurst";
 				this.dustEmitter.emitParticles( this.dustEmitterSettings, 1, this.dustEmitCount);
 			}
-			this.y = obj.getyLinF(this.x);
+			this.y = obj.getyLinF(this.x + this.curVel.x * this.milliDT);
 		// ---- Ramp_TR ---- //
 		} else if (objDirType == "isRampTR") {
 			if (this.collType == "float") {
@@ -1352,8 +1453,66 @@ Crafty.c("Spike_Ball_01", {
 				this.dustEmitterSettings.emitDir = "randomHorizontalBurst";
 				this.dustEmitter.emitParticles( this.dustEmitterSettings, 1, this.dustEmitCount);
 			}
-			this.y = obj.getyLinF(this.x + this.w);
+			this.y = obj.getyLinF(this.x + this.w + this.curVel.x * this.milliDT);
 		}
+	},
+});
+
+// ------------- Spike_Ball_Launcher_01 ------------- //
+Crafty.c("Spike_Ball_Launcher_01", {
+	init: function() {
+		this.requires("Actor, Delay, Entity, SpriteAnimation, spr_spikeBallLauncher_01")
+			.attr({ w: (180 * worldScale), h: (150 * worldScale), z: 8000 });
+		this.direction = "right"; // Recognized: "left", "right"
+		this.shootDelay = 5000; // In ms, time between shots
+		this.projectileCollType = "roll"; // float, roll, bounce
+		this.shootVel = 4;
+		this.postImpactVel = { x: 2, y: 0 };
+
+		this.delay(function() { // Start animation
+			// TODO animation?
+			this.delay(function() { // Instance projectile at end of animation
+				this.shootProjectile();
+			}, 700, 0);
+		}, this.shootDelay, -1); // Loop infinitely
+	},
+
+	setProperties: function(propertiesIn) {
+		this.origin("center");
+		this.direction = propertiesIn.direction;
+		if (propertiesIn.shootDelay) {
+			this.shootDelay = propertiesIn.shootDelay;
+		} else {
+			this.shootDelay = 5000; // Default
+		}
+		if (propertiesIn.shootVel) {
+			this.shootVel = propertiesIn.shootVel;
+		} else {
+			this.shootVel = 4; // Default
+		}
+		if (propertiesIn.collType) {
+			this.shootDelay = propertiesIn.collType;
+		} else {
+			this.collType = "roll"; // Default
+		}
+		if (propertiesIn.postImpactVel) {
+			this.postImpactVel = propertiesIn.postImpactVel;
+		} else {
+			this.postImpactVel = { x: 2, y: 0 };
+		}
+	},
+
+	shootProjectile: function() {
+		entitiesList[entitiesListIndex] = Crafty.e("Spike_Ball_01")
+			.attr({ x: (this.x + (55 * worldScale)), y: (this.y + (55 * worldScale)) }); // Directly tied to size of launcher and spikeball_01, currently not optimal solution
+		if (this.direction == "left") {
+			entitiesList[entitiesListIndex].collType = this.projectileCollType;
+			entitiesList[entitiesListIndex].postImpactVel = this.postImpactVel;
+		} else if (this.direction == "right") {
+			entitiesList[entitiesListIndex].collType = this.projectileCollType;
+			entitiesList[entitiesListIndex].postImpactVel = this.postImpactVel;
+		}
+		entitiesListIndex++;
 	},
 });
 
@@ -1457,11 +1616,12 @@ Crafty.c("Spike_Ball_HitBox_02", {
 		});
 
 		this.bind("EnterFrame", function(frameData) {
+			this.milliDT = (frameData.dt/1000);
 			// Apply spriteObj rotation
 			if (this.rotationDir == "clockwise") {
-				this.spriteObj.rotation += this.spriteObj.rotationSpeed * (frameData.dt/1000);
+				this.spriteObj.rotation += this.spriteObj.rotationSpeed * this.milliDT;
 			} else if (this.rotationDir == "counterClockwise") {
-				this.spriteObj.rotation -= this.spriteObj.rotationSpeed * (frameData.dt/1000);
+				this.spriteObj.rotation -= this.spriteObj.rotationSpeed * this.milliDT;
 			}
 			
 		});
@@ -1499,11 +1659,12 @@ Crafty.c("Spike_Ball_02", {
 		});
 
 		this.bind("EnterFrame", function(frameData) {
+			this.milliDT = (frameData.dt/1000);
 			// ---- Calculate_Rotation_Point ---- //
 			if (this.rotationDir == "clockwise") {
-				this.curRotationAngle += this.rotationSpeed * (frameData.dt/1000);
+				this.curRotationAngle += this.rotationSpeed * this.milliDT;
 			} else if (this.rotationDir == "counterClockwise") {
-				this.curRotationAngle -= this.rotationSpeed * (frameData.dt/1000);
+				this.curRotationAngle -= this.rotationSpeed * this.milliDT;
 			}
 			this.nextRotPoint = this.getPointOnCirlce({ x: this.x, y: this.y }, this.curRotPoint, this.curRotationAngle); // args: (originPointIn, curPointIn, curAngleIn)
 
@@ -1645,9 +1806,9 @@ Crafty.c("JumpPad", {
 Crafty.c("ProjectileShooter", {
 	init: function() {
 		this.requires("Actor, Delay, Entity, SpriteAnimation, spr_projectileShooter_01")
-			.attr({ w: (90 * worldScale), h: (90 * worldScale), z: 5000 });
+			.attr({ w: (90 * worldScale), h: (90 * worldScale), z: 8000 });
 		this.reel("shoot_00r", 1000, 0, 0, 13);
-		this.shootVel = 3;
+		this.shootVel = 200;
 		this.direction = "left"; // Recognized: "left", "right", "up", "down"
 		this.shootDelay = 5000; // In ms, time between shots
 
@@ -1674,7 +1835,7 @@ Crafty.c("ProjectileShooter", {
 		if (propertiesIn.shootVel) {
 			this.shootVel = propertiesIn.shootVel;
 		} else {
-			this.shootVel = 3; // Default
+			this.shootVel = 200; // Default
 		}
 		if (propertiesIn.shootDelay) {
 			this.shootDelay = propertiesIn.shootDelay;
@@ -1719,18 +1880,19 @@ Crafty.c("Projectile", {
 		this.curVel = { x: 0, y: 0 };
 		this.broadphasebox = {x: 0, y: 0, w: 0, h: 0 };
 
-		this.deathEmitter = Crafty.e("ParticleEmitter");
+		this.deathEmitter = Crafty.e("Particle_Emitter");
 		this.deathEmitter.movParent = this;
 		this.deathEmitter.posOffset = {x: this.w, y: this.h/2};
 
 		this.bind("EnterFrame", function(frameData) {
+			this.milliDT = (frameData.dt/1000);
 			// ---- Collision_Detection ---- //
-			this.updateBroadphasebox();
+			this.updateBroadphasebox(this.milliDT);
 			for (var i = solidBlockList.length-1; i > -1; --i) {
 				var tile = solidBlockList[i];
 				if (tile.x+tile.w > this.broadphasebox.x && tile.x < this.broadphasebox.x+this.broadphasebox.w) {
 					if (tile.y+tile.h > this.broadphasebox.y && tile.y < this.broadphasebox.y+this.broadphasebox.h) {
-						this.checkCollisionSweptAABB(tile);
+						this.checkCollisionSweptAABB(tile, this.milliDT);
 					}
 				}
 			}
@@ -1738,14 +1900,14 @@ Crafty.c("Projectile", {
 				var rampTile = solidRampList[i];
 				if (rampTile.x+rampTile.w > this.broadphasebox.x && rampTile.x < this.broadphasebox.x+this.broadphasebox.w) {
 					if (rampTile.y+rampTile.h > this.broadphasebox.y && rampTile.y < this.broadphasebox.y+this.broadphasebox.h) {
-						this.checkCollisionSweptRamp(rampTile);
+						this.checkCollisionSweptRamp(rampTile, this.milliDT);
 					}
 				}
 			}
 
 			// Apply velocities
-			this.x += (this.curVel.x * worldScale);
-			this.y += (this.curVel.y * worldScale);
+			this.x += (this.curVel.x * worldScale) * this.milliDT;
+			this.y += (this.curVel.y * worldScale) * this.milliDT;
 		});
 	},
 

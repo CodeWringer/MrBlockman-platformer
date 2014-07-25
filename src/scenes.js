@@ -28,6 +28,7 @@ Crafty.defineScene("loading", function() {
 		"assets/SpikeBall_02.png",
 		"assets/SpikeBallOrigin_02.png",
 		"assets/SpikeBallChain_02.png",
+		"assets/SpikeBallLauncher_01.png",
 		], function(){ // Things to do after all files have been loaded
 			
 			// -------- Define_Sprite_Maps -------- //
@@ -59,6 +60,9 @@ Crafty.defineScene("loading", function() {
 			// ---- SpikeBall_01 ---- //
 			Crafty.sprite(200, 200, "assets/SpikeBall_01.png", {
 				spr_spikeBall_01: [0, 0]
+			});
+			Crafty.sprite(200, 200, "assets/SpikeBallLauncher_01.png", {
+				spr_spikeBallLauncher_01: [0, 0]
 			});
 			// ---- SpikeBall_02 ---- //
 			Crafty.sprite(200, 200, "assets/SpikeBall_02.png", {

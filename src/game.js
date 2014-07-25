@@ -8,11 +8,10 @@
 
 var window_width = 1280,
 	window_height = 720,
-
-	worldGravity = 0.04, // Default value
-	worldScale = 0.8, // Global var for scaling the game world
-	// Use steps of .1, else the game breaks, as uneven numbers are produced
-
+	
+	worldScale = 0.8, // Global var for scaling the game world, use steps of .1, else the game breaks, because uneven numbers won't work
+	worldGravity = 600 * worldScale, // Default value, distance in pixels per second
+	
 	curLevel = 0;
 
 Game = {

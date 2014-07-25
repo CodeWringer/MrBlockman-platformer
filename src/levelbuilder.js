@@ -40,8 +40,8 @@ function initLevel(levelNum) {
 				// ------ Player_Character ------ //
 				case 2:
 					PC = Crafty.e("PC")
-						.attr({ x: tileX, y: tileY - tileSize.h * 2 });
-					PC.resetPosCoords = { x: tileX, y: tileY - tileSize.h * 2 };
+						.attr({ x: tileX, y: tileY - tileSize.h });
+					PC.resetPosCoords = { x: tileX, y: tileY - tileSize.h };
 					break;
 				// ------ Block_Door ------ //
 				case 3:
@@ -67,29 +67,50 @@ function initLevel(levelNum) {
 					entitiesListIndex++;
 					break;
 				// ------ Spike_Ball_01 ------ //
-				case 20: // float
+				case 20: // float, right
 					entitiesList[entitiesListIndex] = Crafty.e("Spike_Ball_01")
 						.attr({ x: tileX + (13 * worldScale), y: tileY + (13 * worldScale) });
 					entitiesList[entitiesListIndex].resetPosCoords = { x: tileX + (13 * worldScale), y: tileY + (13 * worldScale) };
-					entitiesList[entitiesListIndex].setProperties({ collType: "float" });
+					entitiesList[entitiesListIndex].setProperties({ collType: "float", velocity: { x: 200, y: 0 } });
 					entitiesListIndex++;
 					break;
-				case 21: // roll
+				case 21: // float, left
 					entitiesList[entitiesListIndex] = Crafty.e("Spike_Ball_01")
 						.attr({ x: tileX + (13 * worldScale), y: tileY + (13 * worldScale) });
 					entitiesList[entitiesListIndex].resetPosCoords = { x: tileX + (13 * worldScale), y: tileY + (13 * worldScale) };
-					entitiesList[entitiesListIndex].setProperties({ collType: "roll" });
+					entitiesList[entitiesListIndex].setProperties({ collType: "float", velocity: { x: -200, y: 0 } });
 					entitiesListIndex++;
 					break;
-				case 22: // bounce
+				case 22: // roll, right
 					entitiesList[entitiesListIndex] = Crafty.e("Spike_Ball_01")
 						.attr({ x: tileX + (13 * worldScale), y: tileY + (13 * worldScale) });
 					entitiesList[entitiesListIndex].resetPosCoords = { x: tileX + (13 * worldScale), y: tileY + (13 * worldScale) };
-					entitiesList[entitiesListIndex].setProperties({ collType: "bounce" });
+					entitiesList[entitiesListIndex].setProperties({ collType: "roll", velocity: { x: 200, y: 0 } });
+					entitiesListIndex++;
+					break;
+				case 23: // roll, left
+					entitiesList[entitiesListIndex] = Crafty.e("Spike_Ball_01")
+						.attr({ x: tileX + (13 * worldScale), y: tileY + (13 * worldScale) });
+					entitiesList[entitiesListIndex].resetPosCoords = { x: tileX + (13 * worldScale), y: tileY + (13 * worldScale) };
+					entitiesList[entitiesListIndex].setProperties({ collType: "roll", velocity: { x: -200, y: 0 } });
+					entitiesListIndex++;
+					break;
+				case 24: // bounce, right
+					entitiesList[entitiesListIndex] = Crafty.e("Spike_Ball_01")
+						.attr({ x: tileX + (13 * worldScale), y: tileY + (13 * worldScale) });
+					entitiesList[entitiesListIndex].resetPosCoords = { x: tileX + (13 * worldScale), y: tileY + (13 * worldScale) };
+					entitiesList[entitiesListIndex].setProperties({ collType: "bounce", velocity: { x: 200, y: 0 } });
+					entitiesListIndex++;
+					break;
+				case 25: // bounce, left
+					entitiesList[entitiesListIndex] = Crafty.e("Spike_Ball_01")
+						.attr({ x: tileX + (13 * worldScale), y: tileY + (13 * worldScale) });
+					entitiesList[entitiesListIndex].resetPosCoords = { x: tileX + (13 * worldScale), y: tileY + (13 * worldScale) };
+					entitiesList[entitiesListIndex].setProperties({ collType: "bounce", velocity: { x: -200, y: 0 } });
 					entitiesListIndex++;
 					break;
 				// ------ Spike_Ball_02 ------ //
-				case 24: // clockwise
+				case 26: // clockwise
 					addSolidBlock(tileX, tileY);
 					entitiesList[entitiesListIndex] = Crafty.e("Spike_Ball_02")
 						.attr({ x: tileX + (tileSize.w/2), y: tileY+(tileSize.h/2) });
@@ -97,7 +118,7 @@ function initLevel(levelNum) {
 					entitiesList[entitiesListIndex].setProperties({ rotationDir: "clockwise" });
 					entitiesListIndex++;
 					break;
-				case 25: // counterClockwise
+				case 27: // counterClockwise
 					addSolidBlock(tileX, tileY);
 					entitiesList[entitiesListIndex] = Crafty.e("Spike_Ball_02")
 						.attr({ x: tileX + (tileSize.w/2), y: tileY+(tileSize.h/2) });
@@ -105,7 +126,7 @@ function initLevel(levelNum) {
 					entitiesList[entitiesListIndex].setProperties({ rotationDir: "counterClockwise" });
 					entitiesListIndex++;
 					break;
-				case 26: // clockwise, longer chain
+				case 28: // clockwise, longer chain
 					addSolidBlock(tileX, tileY);
 					entitiesList[entitiesListIndex] = Crafty.e("Spike_Ball_02")
 						.attr({ x: tileX + (tileSize.w/2), y: tileY+(tileSize.h/2) });
@@ -113,7 +134,7 @@ function initLevel(levelNum) {
 					entitiesList[entitiesListIndex].setProperties({ rotationDir: "clockwise", radiusMultiplier: 2 });
 					entitiesListIndex++;
 					break;
-				case 27: // counterClockwise, longer chain
+				case 29: // counterClockwise, longer chain
 					addSolidBlock(tileX, tileY);
 					entitiesList[entitiesListIndex] = Crafty.e("Spike_Ball_02")
 						.attr({ x: tileX + (tileSize.w/2), y: tileY+(tileSize.h/2) });
@@ -151,6 +172,19 @@ function initLevel(levelNum) {
 					entitiesList[entitiesListIndex] = Crafty.e("ProjectileShooter")
 						.attr({ x: tileX, y: tileY });
 					entitiesList[entitiesListIndex].setProperties({ direction: "down" });
+					entitiesListIndex++;
+					break;
+				// ------ SpikeBallLauncher_01 ------ //
+				case 40: // roll, left
+					entitiesList[entitiesListIndex] = Crafty.e("Spike_Ball_Launcher_01")
+						.attr({ x: tileX, y: tileY });
+					entitiesList[entitiesListIndex].setProperties({ direction: "left", collType: "roll", postImpactVel: { x: -200, y: 0 } });
+					entitiesListIndex++;
+					break;
+				case 41: // roll, right
+					entitiesList[entitiesListIndex] = Crafty.e("Spike_Ball_Launcher_01")
+						.attr({ x: tileX, y: tileY });
+					entitiesList[entitiesListIndex].setProperties({ direction: "right", collType: "roll", postImpactVel: { x: 200, y: 0 } });
 					entitiesListIndex++;
 					break;
 				default:
