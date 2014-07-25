@@ -10,7 +10,7 @@ var window_width = 1280,
 	window_height = 720,
 	
 	worldScale = 0.8, // Global var for scaling the game world, use steps of .1, else the game breaks, because uneven numbers won't work
-	worldGravity = 600 * worldScale, // Default value, distance in pixels per second
+	worldGravity = 600 * worldScale, // Default value
 	
 	curLevel = 0;
 

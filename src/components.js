@@ -11,7 +11,7 @@
 // ------------- collisionDetection ------------- //
 Crafty.c("collisionDetection", {
 	init: function() {
-		this.lastCollisionObj = "floor";
+		this.lastCollObj = "floor";
 	},
 
 	updateBroadphasebox: function(milliDT) {
@@ -23,15 +23,36 @@ Crafty.c("collisionDetection", {
 		this.broadphasebox.h = yVel >= 0 ? this.h + yVel : this.h - yVel;
 	},
 
+	getlastCollObj: function(objDirTypeIn) {
+		if (objDirTypeIn == "isWallL") {
+			return "wallL";
+		} else if (objDirTypeIn == "isWallR") {
+			return "wallR";
+		} else if (objDirTypeIn == "isFloor") {
+			return "floor";
+		} else if (objDirTypeIn == "isCeiling") {
+			return "ceiling";
+
+		} else if (objDirTypeIn == "isRampBL") {
+			return "rampBL";
+		} else if (objDirTypeIn == "isRampBR") {
+			return "rampBR";
+		} else if (objDirTypeIn == "isRampTL") {
+			return "rampTL";
+		} else if (objDirTypeIn == "isRampTR") {
+			return "rampTR";
+		}
+	},
+
 	// Attempts to predict this object's location in the next frame and prevent collisions beforehand
-	// Uses the swept method, to deal with very fast objects
+	// Uses the swept method, to deal with very fast objects (Currently still flawed, need to look into this more)
 	checkCollisionSweptAABB: function(obj, milliDT) {
 		// Declare vars
 		var xVel = this.curVel.x * milliDT;
 		var yVel = this.curVel.y * milliDT;
 
-		var xNext = this.x + xVel * milliDT;
-		var yNext = this.y + yVel * milliDT;
+		var nextL = this.x + xVel;
+		var nextT = this.y + yVel;
 
 		// Find entry and exit points on both axes
 		var xEntry = xVel > 0 ? obj.x : obj.x + obj.w;
@@ -50,7 +71,7 @@ Crafty.c("collisionDetection", {
 			objR = obj.x + obj.w,
 			objT = obj.y,
 			objB = obj.y + obj.h,
-			a = ((yNext - this.y) / (xNext - this.x));
+			a = ((nextT - this.y) / (nextL - this.x));
 
 		// Formulas
 		// a = (y2-y1) / (x2-x1)
@@ -76,12 +97,12 @@ Crafty.c("collisionDetection", {
 				if (yLinF0 >= objT && yLinF0 <= objB || yLinF1 >= objT && yLinF1 <= objB || yLinF3 >= objT && yLinF3 <= objB) { // Coming from the left
 					if (obj.isWallL) {
 						this.respondToCollision(obj, "isWallL");
-						this.lastCollisionObj = "wallL";
+						this.lastCollObj = "wallL";
 					}
 				} else if (xLinF2 >= objL && xLinF2 <= objR || xLinF1 >= objL && xLinF1 <= objR) { // Coming from above
 					if (obj.isFloor) {
 						this.respondToCollision(obj, "isFloor");
-						this.lastCollisionObj = "floor";
+						this.lastCollObj = "floor";
 					}
 				}
 			} else if (yVel < 0) { // up
@@ -101,12 +122,12 @@ Crafty.c("collisionDetection", {
 				if (yLinF1 >= objT && yLinF1 <= objB || yLinF2 >= objT && yLinF2 <= objB || yLinF3 >= objT && yLinF3 <= objB) { // Coming from the left
 					if (obj.isWallL) {
 						this.respondToCollision(obj, "isWallL");
-						this.lastCollisionObj = "wallL";
+						this.lastCollObj = "wallL";
 					}
 				} else if (xLinF0 >= objL && xLinF0 <= objR || xLinF1 >= objL && xLinF1 <= objR) { // Coming from below
 					if (obj.isCeiling) {
 						this.respondToCollision(obj, "isCeiling");
-						this.lastCollisionObj = "ceiling";
+						this.lastCollObj = "ceiling";
 					}
 				}
 			} else if (yVel == 0) {
@@ -121,7 +142,7 @@ Crafty.c("collisionDetection", {
 				if (yLinF0 >= objT && yLinF0 <= objB || yLinF1 >= objT && yLinF1 <= objB) { // Coming from the left
 					if (obj.isWallL) {
 						this.respondToCollision(obj, "isWallL");
-						this.lastCollisionObj = "wallL";
+						this.lastCollObj = "wallL";
 					}
 				}
 			}
@@ -143,12 +164,12 @@ Crafty.c("collisionDetection", {
 				if (yLinF0 >= objT && yLinF0 <= objB || yLinF1 >= objT && yLinF1 <= objB || yLinF3 >= objT && yLinF3 <= objB) { // Coming from the right
 					if (obj.isWallR) {
 						this.respondToCollision(obj, "isWallR");
-						this.lastCollisionObj = "wallR";
+						this.lastCollObj = "wallR";
 					}
 				} else if (xLinF2 >= objL && xLinF2 <= objR || xLinF1 >= objL && xLinF1 <= objR) { // Coming from above
 					if (obj.isFloor) {
 						this.respondToCollision(obj, "isFloor");
-						this.lastCollisionObj = "floor";
+						this.lastCollObj = "floor";
 					}
 				}
 			} else if (yVel < 0) { // up
@@ -168,12 +189,12 @@ Crafty.c("collisionDetection", {
 				if (yLinF2 >= objT && yLinF2 <= objB || yLinF1 >= objT && yLinF1 <= objB || yLinF3 >= objT && yLinF3 <= objB) { // Coming from the right
 					if (obj.isWallR) {
 						this.respondToCollision(obj, "isWallR");
-						this.lastCollisionObj = "wallR";
+						this.lastCollObj = "wallR";
 					}
 				} else if (xLinF0 >= objL && xLinF0 <= objR || xLinF1 >= objL && xLinF1 <= objR) { // Coming from below
 					if (obj.isCeiling) {
 						this.respondToCollision(obj, "isCeiling");
-						this.lastCollisionObj = "ceiling";
+						this.lastCollObj = "ceiling";
 					}
 				}
 			} else if (yVel == 0) {
@@ -188,7 +209,7 @@ Crafty.c("collisionDetection", {
 				if (yLinF0 >= objT && yLinF0 <= objB || yLinF1 >= objT && yLinF1 <= objB) { // Coming from the left
 					if (obj.isWallR) {
 						this.respondToCollision(obj, "isWallR");
-						this.lastCollisionObj = "wallR";
+						this.lastCollObj = "wallR";
 					}
 				}
 			}
@@ -199,7 +220,7 @@ Crafty.c("collisionDetection", {
 				if (r-2 >= objL && l+2 <= objR) { // Coming from above
 					if (obj.isFloor) {
 						this.respondToCollision(obj, "isFloor");
-						this.lastCollisionObj = "floor";
+						this.lastCollObj = "floor";
 					}
 				}
 			} else if (yVel < 0) {
@@ -208,23 +229,49 @@ Crafty.c("collisionDetection", {
 				if (r-2 >= objL && l+2 <= objR) { // Coming from below
 					if (obj.isCeiling) {
 						this.respondToCollision(obj, "isCeiling");
-						this.lastCollisionObj = "ceiling";
+						this.lastCollObj = "ceiling";
 					}
 				}
 			}
 		}
 	},
 
+	checkLinFAndCallResponse: function(yIn, xIn, obj, objDirTypeIn, yChecksSmallerThan) {
+		if (yChecksSmallerThan == true) {
+			// Check against the ramp linear function
+			if (yIn < obj.getyLinF(xIn)) {
+				this.respondToCollision(obj, objDirTypeIn);
+				this.lastCollObj = this.getlastCollObj(objDirTypeIn);
+			}
+		} else {
+			// Check against the ramp linear function
+			if (yIn > obj.getyLinF(xIn)) {
+				this.respondToCollision(obj, objDirTypeIn);
+				this.lastCollObj = this.getlastCollObj(objDirTypeIn);
+			}
+		}
+	},
+
 	checkCollisionSweptRamp: function(obj, milliDT) {
 		// Declare vars
-		var xVel = this.curVel.x * milliDT;
-		var yVel = this.curVel.y * milliDT;
+		var xVel = this.curVel.x * milliDT,
+			yVel = this.curVel.y * milliDT,
 
-		var xNext = this.x + xVel * milliDT;
-		var yNext = this.y + yVel * milliDT;
+			curL = this.x,
+			curR = (this.x + this.w),
+			curT = this.y,
+			curB = (this.y + this.h),
 
-		var thisR = xNext + this.w,
-			thisB = yNext + this.h;
+			objL = obj.x,
+			objR = (obj.x + obj.w),
+			objT = obj.y,
+			objB = (obj.y + obj.h),
+
+			nextL = this.x + xVel,
+			nextT = this.y + yVel,
+
+			nextR = nextL + this.w,
+			nextB = nextT + this.h;
 
 		// Formulas
 		// a = (y2-y1) / (x2-x1)
@@ -233,84 +280,56 @@ Crafty.c("collisionDetection", {
 		// x = (y - b) / a
 
 		// Find obj type
+		// ---------------- Ramp_BL ---------------- //
 		if (obj.isBL) {
-			// ---- X_Axis_Check ---- //
-			if (xNext >= obj.x - 1 && xNext <= obj.x + obj.w + 1) {
-				if (this.lastCollisionObj == "wallR") { // Check if the last collision was with a wall, if so, require additional check before calling respondToCollision
-					// ---- Y_Axis_Check ---- //
-					if (thisB >= obj.y -1 && thisB <= obj.y + obj.h + 1) {
-						// Check against the ramp linear function. (!same functions!)
-						if (thisB > obj.getyLinF(xNext)) {
-							this.respondToCollision(obj, "isRampBL");
-							this.lastCollisionObj = "rampBL";
-						}
-					}
-				} else {
-					// Check against the ramp linear function. (!same functions!)
-					if (thisB > obj.getyLinF(xNext)) {
-						this.respondToCollision(obj, "isRampBL");
-						this.lastCollisionObj = "rampBL";
-					}
+			if (this.lastCollObj == "wallR") { // Check if the last collision was with a wall
+				// ---- X_Axis_Check ---- //
+				if (curL >= objL && curL < objR && nextL <= objR) {
+					this.checkLinFAndCallResponse(nextB, nextL, obj, "isRampBL", false);
+				}
+			} else {
+				// ---- X_Axis_Check ---- //
+				if (curL >= objL && nextL <= objR) {
+					this.checkLinFAndCallResponse(nextB, nextL, obj, "isRampBL", false);
 				}
 			}
+		// ---------------- Ramp_BR ---------------- //
 		} else if (obj.isBR) {
-			// ---- X_Axis_Check ---- //
-			if (thisR >= obj.x -1 && thisR <= obj.x + obj.w + 1) {
-				if (this.lastCollisionObj == "wallL") { // Check if the last collision was with a wall, if so, require additional check before calling respondToCollision
-					// ---- Y_Axis_Check ---- //
-					if (thisB >= obj.y -1 && thisB <= obj.y + obj.h + 1) {
-						// Check against the ramp linear function. (!same functions!)
-						if (thisB > obj.getyLinF(thisR)) {
-							this.respondToCollision(obj, "isRampBR");
-							this.lastCollisionObj = "rampBR";
-						}
-					}
-				} else {
-					// Check against the ramp linear function. (!same functions!)
-					if (thisB > obj.getyLinF(thisR)) {
-						this.respondToCollision(obj, "isRampBR");
-						this.lastCollisionObj = "rampBR";
-					}
+			if (this.lastCollObj == "wallL") { // Check if the last collision was with a wall
+				// ---- X_Axis_Check ---- //
+				if (curR <= objR && curR > objL && nextR >= objL) {
+					this.checkLinFAndCallResponse(nextB, nextR, obj, "isRampBR", false);
+				}
+			} else {
+				// ---- X_Axis_Check ---- //
+				if (curR <= objR && nextR >= objL) {
+					this.checkLinFAndCallResponse(nextB, nextR, obj, "isRampBR", false);
 				}
 			}
+		// ---------------- Ramp_TL ---------------- //
 		} else if (obj.isTL) {
-			// ---- X_Axis_Check ---- //
-			if (xNext >= obj.x - 1 && xNext <= obj.x + obj.w + 1) {
-				if (this.lastCollisionObj == "wallR") { // Check if the last collision was with a wall, if so, require additional check before calling respondToCollision
-					// ---- Y_Axis_Check ---- //
-					if (this.y >= obj.y -1 && this.y <= obj.y + obj.h + 1) {
-						// Check against the ramp linear function. (!same functions!)
-						if (yNext < obj.getyLinF(xNext)) {
-							this.respondToCollision(obj, "isRampTL");
-							this.lastCollisionObj = "rampTL";
-						}
-					}
-				} else {
-					// Check against the ramp linear function. (!same functions!)
-					if (yNext < obj.getyLinF(xNext)) {
-						this.respondToCollision(obj, "isRampTL");
-						this.lastCollisionObj = "rampTL";
-					}
+			if (this.lastCollObj == "wallR") { // Check if the last collision was with a wall
+				// ---- X_Axis_Check ---- //
+				if (curL >= objL && curL < objR && nextL <= objR) {
+					this.checkLinFAndCallResponse(nextT, nextL, obj, "isRampTL", true);
+				}
+			} else {
+				// ---- X_Axis_Check ---- //
+				if (curL >= objL && nextL <= objR) {
+					this.checkLinFAndCallResponse(nextT, nextL, obj, "isRampTL", true);
 				}
 			}
+		// ---------------- Ramp_TR ---------------- //
 		} else if (obj.isTR) {
-			// ---- X_Axis_Check ---- //
-			if (thisR >= obj.x - 1 && thisR <= obj.x + obj.w + 1) {
-				if (this.lastCollisionObj == "wallL") { // Check if the last collision was with a wall, if so, require additional check before calling respondToCollision
-					// ---- Y_Axis_Check ---- //
-					if (this.y >= obj.y -1 && this.y <= obj.y + obj.h + 1) {
-						// Check against the ramp linear function. (!same functions!)
-						if (yNext < obj.getyLinF(thisR)) {
-							this.respondToCollision(obj, "isRampTR");
-							this.lastCollisionObj = "rampTR";
-						}
-					}
-				} else {
-					// Check against the ramp linear function. (!same functions!)
-					if (yNext < obj.getyLinF(thisR)) {
-						this.respondToCollision(obj, "isRampTR");
-						this.lastCollisionObj = "rampTR";
-					}
+			if (this.lastCollObj == "wallL") { // Check if the last collision was with a wall
+				// ---- X_Axis_Check ---- //
+				if (curR <= objR && curR > objL && nextR >= objL) {
+					this.checkLinFAndCallResponse(nextT, nextR, obj, "isRampTR", true);
+				}
+			} else {
+				// ---- X_Axis_Check ---- //
+				if (curR <= objR && nextR >= objL) {
+					this.checkLinFAndCallResponse(nextT, nextR, obj, "isRampTR", true);
 				}
 			}
 		}
@@ -552,11 +571,11 @@ Crafty.c("PC_Sprite", {
 // ------------- Player_Character ------------- //
 Crafty.c("PC", {
 	init: function() {
-		this.maxVel = (300 * worldScale);
+		this.maxVel = (650 * worldScale);
 		this.accelSpeed = (this.maxVel * 2.6);
 		this.decelSpeed = (this.maxVel * 3.6);
 		
-		this.jumpImpulse = (-450 * worldScale);
+		this.jumpImpulse = (-620 * worldScale);
 		this.curVel = { x: 0, y: 0 };
 		this.broadphasebox = {x: 0, y: 0, w: 0, h: 0 };
 		this.lastDir = "right";
@@ -637,13 +656,13 @@ Crafty.c("PC", {
 			// ------ PC_Movement ------ //
 			if (!this.isDead) {
 				if (this.isDown("A")) { // Moving left
-					if (this.curVel > 0) { // Still moving right
+					if (this.curVel.x > 0) { // Still moving right
 						this.curVel.x = 0;
 					} else if (this.curVel.x > -this.maxVel) { // If maxVel has not yet been reached, keep increasing curVel
 						this.curVel.x -= this.decelSpeed * this.milliDT;
 					}
 				} else if (this.isDown("D")) { // Moving right
-					if (this.curVel < 0) { // Still moving left
+					if (this.curVel.x < 0) { // Still moving left
 						this.curVel.x = 0;
 					} else if (this.curVel.x < this.maxVel) { // If maxVel has not yet been reached, keep increasing curVel
 						this.curVel.x -= -this.decelSpeed * this.milliDT;
@@ -660,7 +679,7 @@ Crafty.c("PC", {
 				}
 				
 				// ----- Y_Velocity_Decrease ----- //
-				this.curVel.y += (worldGravity * worldScale) * this.milliDT; // Gravity
+				this.curVel.y += (worldGravity*2 * worldScale) * this.milliDT; // Gravity
 
 				// ------ Set_Last_Movement_Direction ------ //
 				if (this.curVel.x > 0) {
