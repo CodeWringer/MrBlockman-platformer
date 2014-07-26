@@ -14,11 +14,12 @@ Crafty.defineScene("loading", function() {
 	Crafty.load([
 		// Files to load
 		"assets/Blockman_01.png",
+		"assets/Blockman_01_Parachute.png",
+		"assets/Blockman_01_Long.png",
 		"assets/BlockDoor_01.png",
 		"assets/solidBlocks_02_Ramps.png",
 		"assets/solidBlocks_trims_02.png",
 		"assets/solidBlock_bg_02.png",
-		"assets/Blockman_01_Parachute.png",
 		"assets/checkPoint_01.png",
 		"assets/SpikeBall_01.png",
 		"assets/JumpPad_01.png",
@@ -29,6 +30,7 @@ Crafty.defineScene("loading", function() {
 		"assets/SpikeBallOrigin_02.png",
 		"assets/SpikeBallChain_02.png",
 		"assets/SpikeBallLauncher_01.png",
+		"assets/glow_red.png",
 		], function(){ // Things to do after all files have been loaded
 			
 			// -------- Define_Sprite_Maps -------- //
@@ -38,6 +40,9 @@ Crafty.defineScene("loading", function() {
 			});
 			Crafty.sprite(150, 200, "assets/Blockman_01.png", {
 				spr_PC: [0, 0]
+			});
+			Crafty.sprite(150, 200, "assets/Blockman_01_Long.png", {
+				spr_PC_Long: [0, 0]
 			});
 			// ---- BlockDoor ---- //
 			Crafty.sprite(128, 180, "assets/BlockDoor_01.png", {
@@ -90,6 +95,9 @@ Crafty.defineScene("loading", function() {
 			// ---- General_Effects ---- //
 			Crafty.sprite(200, 200, "assets/dust_01.png", {
 				spr_dust_01: [0, 0]
+			});
+			Crafty.sprite(64, 64, "assets/glow_red.png", {
+				spr_glowRed_01: [0, 0]
 			});
 
 			Crafty.enterScene("Game");

@@ -503,7 +503,7 @@ Crafty.c("ClipBlock_Hazard", {
 		this.isWallL = true;
 		this.isWallR = true;
 		this.isValid = true;
-		this.requires("Actor, Solid, HazardClip, SpriteAnimation");
+		this.requires("Actor, HazardClip");
 	},
 });
 
@@ -544,19 +544,43 @@ Crafty.c("PC_Sprite", {
 			.attr({w: (70 * worldScale), h: (95 * worldScale), z: 9001});
 
 		// ------ Define_Animations ------ //
-		this.reel("PC_Idle00r", 2000, 0, 0, 47)		//Idle, facing right
-			.reel("PC_Idle00l", 2000, 0, 1, 47)		//Idle, facing left
-			.reel("PC_Walk00r", 1000, 0, 6, 23)		//Walking, facing right
-			.reel("PC_Walk00l", 1000, 0, 7, 23)		//Walking, facing left
-			.reel("PC_Run00r", 500, 0, 2, 11)		//Running, facing right
-			.reel("PC_Run00l", 500, 0, 3, 11)		//Running, facing left
-			.reel("PC_Jump00r_st", 500, 0, 4, 12)	//Jumping start, facing right
-			.reel("PC_Jump00l_st", 500, 0, 5, 12)	//Jumping start, facing left
-			.reel("PC_Jump00r_mid", 1000, 12, 4, 1)	//Falling, facing right
-			.reel("PC_Jump00l_mid", 1000, 12, 5, 1)	//Falling, facing left
-			.reel("PC_Bloat00r", 750, 0, 8, 18)		//Bloating, facing right
-			.reel("PC_Bloat00l", 750, 0, 9, 18)		//Bloating, facing left
-			.reel("PC_Invisible", 2000, 47, 3, 1);	//An unused spot in the tilemap
+		this.reel("PC_Idle00r", 2000, 0, 0, 47)		// Idle, facing right
+			.reel("PC_Idle00l", 2000, 0, 1, 47)		// Idle, facing left
+			.reel("PC_Walk00r", 1000, 0, 6, 23)		// Walking, facing right
+			.reel("PC_Walk00l", 1000, 0, 7, 23)		// Walking, facing left
+			.reel("PC_Run00r", 500, 0, 2, 11)		// Running, facing right
+			.reel("PC_Run00l", 500, 0, 3, 11)		// Running, facing left
+			.reel("PC_Jump00r_st", 500, 0, 4, 12)	// Jumping start, facing right
+			.reel("PC_Jump00l_st", 500, 0, 5, 12)	// Jumping start, facing left
+			.reel("PC_Jump00r_mid", 1000, 12, 4, 1)	// Falling, facing right
+			.reel("PC_Jump00l_mid", 1000, 12, 5, 1)	// Falling, facing left
+			.reel("PC_Bloat00r", 750, 0, 8, 18)		// Bloating, facing right
+			.reel("PC_Bloat00l", 750, 0, 9, 18)		// Bloating, facing left
+			.reel("PC_Invisible", 2000, 47, 3, 1);	// An unused spot in the tilemap
+
+		this.bind("EnterFrame", function(frameData) {
+			// ------ Update_This ------ //
+			if (this.movParent != null) {
+				this.x = this.movParent.x - this.offset.x;
+				this.y = this.movParent.y - this.offset.y;
+			}
+		});
+	},
+});
+
+// ------------- Player_Character_Sprite_Long ------------- //
+Crafty.c("PC_Sprite_Long", {
+	init: function() {
+		this.movParent = null;
+		this.offset = { x: 0, y: 0 };
+
+		this.requires("Actor, SpriteAnimation, SprLocOffset, spr_PC_Long")
+			.attr({w: (70 * worldScale), h: (95 * worldScale), z: 9001});
+
+		// ------ Define_Animations ------ //
+		this.reel("PC_LongInvisible", 1000, 117, 0, 1)		// An unused spot in the tilemap
+			.reel("PC_IdleBored00r", 4000, 0, 0, 116)		// IdleBored, facing right
+			.reel("PC_IdleBored00l", 4000, 0, 1, 116);		// IdleBored, facing left
 
 		this.bind("EnterFrame", function(frameData) {
 			// ------ Update_This ------ //
@@ -582,6 +606,7 @@ Crafty.c("PC", {
 		this.resetPosCoords = { x: 0, y: 0 };
 		this.isDead = false;
 		this.canJump = true;
+		this.idleTimer = 0;
 
 		var collidedD = false;
 
@@ -591,6 +616,11 @@ Crafty.c("PC", {
 		this.spriteObj = Crafty.e("PC_Sprite");
 		this.spriteObj.movParent = this;
 		this.spriteObj.setOffset();
+
+		this.spriteObj2 = Crafty.e("PC_Sprite_Long");
+		this.spriteObj2.movParent = this;
+		this.spriteObj2.setOffset();
+		this.spriteObj2.animate("PC_LongInvisible", 1);
 
 		this.deathEmitter = Crafty.e("Particle_Emitter");
 		this.deathEmitter.movParent = this;
@@ -629,6 +659,7 @@ Crafty.c("PC", {
 
 		// ------ Key_inputs ------ //
 		this.bind("KeyDown", function(e) {
+			this.idleTimer = 0;
 			if (!this.isDead) {
 				if (e.key == Crafty.keys.SPACE && collidedD == true)  {
 					this.jump(this.jumpImpulse);
@@ -640,6 +671,7 @@ Crafty.c("PC", {
 			}
 		});
 		this.bind("KeyUp", function(e) {
+			this.idleTimer = 0;
 			if (!this.isDead) {
 				if (e.key == Crafty.keys.SPACE) {
 					if (this.curVel.y < 0) {
@@ -714,10 +746,12 @@ Crafty.c("PC", {
 					} else if (this.curVel.x < 0 && !this.spriteObj.isPlaying("PC_Run00l")) {
 						this.spriteObj.animate("PC_Run00l", 1);
 					} else if (this.curVel.x == 0) {
-						if (this.lastDir == "right" && !this.spriteObj.isPlaying("PC_Idle00r")) {
-							this.spriteObj.animate("PC_Idle00r", 1);
-						} else if (this.lastDir == "left" && !this.spriteObj.isPlaying("PC_Idle00l")) {
-							this.spriteObj.animate("PC_Idle00l", 1);
+						if (!this.spriteObj2.isPlaying("PC_IdleBored00r") && !this.spriteObj2.isPlaying("PC_IdleBored00l")) {
+							if (this.lastDir == "right" && !this.spriteObj.isPlaying("PC_Idle00r")) {
+								this.spriteObj.animate("PC_Idle00r", 1);
+							} else if (this.lastDir == "left" && !this.spriteObj.isPlaying("PC_Idle00l")) {
+								this.spriteObj.animate("PC_Idle00l", 1);
+							}
 						}
 					}
 				} else {
@@ -729,6 +763,23 @@ Crafty.c("PC", {
 						}
 					}
 				}
+			}
+
+			this.idleTimer += 1000 * this.milliDT;
+			if (this.idleTimer >= 20000) {
+				if (this.isDead == false) {
+					this.spriteObj.animate("PC_Invisible", 1);
+					if (this.lastDir == "right") {
+						this.spriteObj2.animate("PC_IdleBored00r", 1);
+					} else if (this.lastDir == "left") {
+						this.spriteObj2.animate("PC_IdleBored00l", 1);
+					}
+				}
+			}
+			if (!this.spriteObj2.isPlaying("PC_IdleBored00r") && !this.spriteObj2.isPlaying("PC_IdleBored00l") || this.curVel.x != 0 || this.curVel.y != 0) {
+				this.spriteObj2.animate("PC_LongInvisible", 1);
+			} else {
+				this.idleTimer = 0;
 			}
 
 			// ------ Update_Hitbox ------ //
@@ -779,7 +830,7 @@ Crafty.c("PC", {
 			}, 900, 0);
 			// Delay the deathEmitter
 			this.delay(function() {
-				this.deathEmitterSettings = { emitW: (40 * worldScale), emitH: (60 * worldScale), emitDir: "randomUpWideBurst", emitStrength: 1, gravityType: "slowFall", emitCollSetting: "noCollide", emitExpire: true, emitLifeTime: 5000, sprite: "spr_PC_Parachute", fadeOutTime: 2000 };
+				this.deathEmitterSettings = { emitW: 40, emitH: 60, emitVel: { xMin: 0, xMax: 120, yMin: 120, yMax: 150 }, emitRandom: true, emitRandNegX: true, gravityType: "slowFall", emitCollSetting: "noCollide", emitExpire: true, emitLifeTime: 5000, sprite: "spr_PC_Parachute", fadeOutTime: 2000 };
 				this.deathEmitter.emitParticles( this.deathEmitterSettings, 1, 12);
 			}, 700, 0);
 			// Delay resetPos
@@ -804,7 +855,7 @@ Crafty.c("PC", {
 	},
 
 	respondToCollision: function(obj, objDirType) {
-		this.feetDustEmitterSettings = { emitW: (40 * worldScale), emitH: (40 * worldScale), emitDir: "randomHorizontalBurst", rotationSpeed: 45, emitStrength: 1, gravityType: "decelerate", emitCollSetting: "noCollide", emitExpire: true, emitLifeTime: 500, sprite: "spr_dust_01", fadeInTime: 500, fadeOutTime: 800 };
+		this.feetDustEmitterSettings = { emitW: 40, emitH: 40, emitVel: { xMin: 60, xMax: 80, yMin: -1, yMax: 0 }, emitRandom: true, emitRandNegX: true, rotationSpeed: 45, gravityType: "decelerate", emitCollSetting: "noCollide", emitExpire: true, emitLifeTime: 500, sprite: "spr_dust_01", fadeInTime: 500, fadeOutTime: 800 };
 		var objL = obj.x,
 			objR = obj.x + obj.w,
 			objT = obj.y,
@@ -820,20 +871,20 @@ Crafty.c("PC", {
 			this.curVel.y = 0;
 			this.y = objB;
 		} else if (objDirType == "isFloor") {
-			if (this.curVel.y > (400 * worldScale)) {
+			if (this.curVel.y > (500 * worldScale)) {
 				this.feetDustEmitter.emitParticles( this.feetDustEmitterSettings, 1, 5);
 			}
 			this.curVel.y = 0;
 			this.y = objT - this.h;
 
 		} else if (objDirType == "isRampBL") { // Ramps
-			if (this.curVel.y > (400 * worldScale)) {
+			if (this.curVel.y > (500 * worldScale)) {
 				this.feetDustEmitter.emitParticles( this.feetDustEmitterSettings, 1, 5);
 			}
 			this.curVel.y = 0;
 			this.y = obj.getyLinF(this.x + this.curVel.x * this.milliDT) - this.h;
 		} else if (objDirType == "isRampBR") {
-			if (this.curVel.y > (400 * worldScale)) {
+			if (this.curVel.y > (500 * worldScale)) {
 				this.feetDustEmitter.emitParticles( this.feetDustEmitterSettings, 1, 5);
 			}
 			this.curVel.y = 0;
@@ -888,7 +939,6 @@ Crafty.c("Particle_Emitter", {
 			} else {
 				var rotationSpeedOut = 0;
 			}
-
 			if (emitSettingsIn.fadeOutTime) {
 				var fadeOutTimeOut = emitSettingsIn.fadeOutTime;
 			} else {
@@ -899,50 +949,51 @@ Crafty.c("Particle_Emitter", {
 			} else {
 				var fadeInTimeOut = 0;
 			}
-
-			if (emitSettingsIn.emitDir != null) {
-				// Find out if emitVelIn.direction is among the list of recognized directions
-				if (emitSettingsIn.emitDir == "randomUpWideBurst") {
-					emitVelOut.x = getRandomArbitrary((0 * emitSettingsIn.emitStrength), (120 * emitSettingsIn.emitStrength));
-					emitVelOut.y = getRandomArbitrary((120 * emitSettingsIn.emitStrength), (150 * emitSettingsIn.emitStrength)) * (-1);
-					if (Math.random() < 0.5) {
-						emitVelOut.x *= (-1);
-					}
-				} else if (emitSettingsIn.emitDir == "randomUpNarrowBurst") {
-					emitVelOut.x = getRandomArbitrary((0 * emitSettingsIn.emitStrength), (60 * emitSettingsIn.emitStrength));
-					emitVelOut.y = getRandomArbitrary((120 * emitSettingsIn.emitStrength), (150 * emitSettingsIn.emitStrength)) * (-1);
-					if (Math.random() < 0.5) {
-						emitVelOut.x = emitVelOut.x * (-1);
-					}
-				} else if (emitSettingsIn.emitDir == "randomHorizontalBurst") {
-					emitVelOut.x = getRandomArbitrary((60 * emitSettingsIn.emitStrength), (80 * emitSettingsIn.emitStrength));
-					emitVelOut.y = getRandomArbitrary(0, 1) * (-1);
-					if (Math.random() < 0.5) {
-						emitVelOut.x = emitVelOut.x * (-1);
-					}
-				} else if (emitSettingsIn.emitDir == "randomVerticalBurst") {
-					emitVelOut.x = getRandomArbitrary(0, 1);
-					emitVelOut.y = getRandomArbitrary((60 * emitSettingsIn.emitStrength), (80 * emitSettingsIn.emitStrength));
-					if (Math.random() < 0.5) {
-						emitVelOut.y = emitVelOut.y * (-1);
-					}
-				}
-			} else if (emitSettingsIn.emitVelX && emitSettingsIn.emitVelY) {
-				emitVelOut.x = emitSettingsIn.emitVelX;;
-				emitVelOut.y = emitSettingsIn.emitVelY;
-			} else {
-				emitVelOut.x = 0;
-				emitVelOut.y = 0;
-			}
-
 			if (emitSettingsIn.gravityType != "decelerate" && emitSettingsIn.gravityType != "slowFall") {
 				var gravityTypeOut = "ignore";
 			} else {
 				var gravityTypeOut = emitSettingsIn.gravityType;
 			}
+			if (emitSettingsIn.emitStrength) {
+				var emitStrength = emitSettingsIn.emitStrength;
+			} else {
+				var emitStrength = 1;
+			}
 
+			if (emitSettingsIn.emitRandom) {
+				var emitRandom = emitSettingsIn.emitRandom;
+			} else {
+				var emitRandom = true;
+			}
+			if (emitSettingsIn.emitRandNegX) { // Setting allows x velocity to be multiplied by -1 randomly
+				var emitRandNegX = emitSettingsIn.emitRandNegX;
+			} else {
+				var emitRandNegX = false;
+			}
+			if (emitSettingsIn.emitRandNegY) { // Setting allows y velocity to be multiplied by -1 randomly
+				var emitRandNegY = emitSettingsIn.emitRandNegY;
+			} else {
+				var emitRandNegY = false;
+			}
+
+			if (emitSettingsIn.emitVel) {
+				if (emitRandom == true) {
+					emitVelOut.x = getRandomArbitrary((emitSettingsIn.emitVel.xMin * emitStrength), (emitSettingsIn.emitVel.xMax * emitStrength));
+					emitVelOut.y = getRandomArbitrary((emitSettingsIn.emitVel.yMin * emitStrength), (emitSettingsIn.emitVel.yMax * emitStrength)) * (-1);
+					if (emitRandNegX == true && Math.random() < 0.5) {
+						emitVelOut.x *= (-1);
+					}
+					if (emitRandNegY == true && Math.random() < 0.5) {
+						emitVelOut.y *= (-1);
+					}
+				} else {
+					// 
+				}
+			} else {
+				// 
+			}
 			// ---- Particle_Creation ---- //
-			var propertiesOut = { x: this.x, y: this.y, w: emitSettingsIn.emitW, h: emitSettingsIn.emitH, xVel: emitVelOut.x, yVel: emitVelOut.y, gravityType: gravityTypeOut, collSetting: emitSettingsIn.emitCollSetting, expire: emitSettingsIn.emitExpire, lifeTime: emitSettingsIn.emitLifeTime, color: colorOut, sprite: spriteOut, rotationSpeed: rotationSpeedOut, fadeOutTime: fadeOutTimeOut, fadeInTime: fadeInTimeOut };
+			var propertiesOut = { x: this.x, y: this.y, w: (emitSettingsIn.emitW * worldScale), h: (emitSettingsIn.emitH * worldScale), xVel: (emitVelOut.x * worldScale), yVel: (emitVelOut.y * worldScale), gravityType: gravityTypeOut, collSetting: emitSettingsIn.emitCollSetting, expire: emitSettingsIn.emitExpire, lifeTime: emitSettingsIn.emitLifeTime, color: colorOut, sprite: spriteOut, rotationSpeed: rotationSpeedOut, fadeOutTime: fadeOutTimeOut, fadeInTime: fadeInTimeOut };
 			particleList[particleListIndex] = Crafty.e("Particle");
 			particleList[particleListIndex].setProperties( propertiesOut );
 			particleListIndex++;
@@ -1030,20 +1081,27 @@ Crafty.c("Particle", {
 	},
 
 	setProperties: function( propertiesIn ) {
-		if (propertiesIn.xVel) {
-			this.curVel.x = propertiesIn.xVel;
-		}
-		if (propertiesIn.yVel) {
-			this.curVel.y = propertiesIn.yVel;
-		}
-
-		if (propertiesIn.color != null) {
+		if (propertiesIn.color) {
 			this.requires("Color");
 			this.color(propertiesIn.color);
 		}
-
+		if (propertiesIn.fadeOutTime ) {
+			this.fadeOutTime = propertiesIn.fadeOutTime;
+			this.fadeOutTimeInitial = propertiesIn.fadeOutTime;
+		} else {
+			this.fadeOutTime = 0;
+			this.fadeOutTimeInitial = 0;
+		}
+		if (propertiesIn.fadeInTime ) {
+			this.fadeInTime = propertiesIn.fadeInTime;
+			this.fadeInTimeInitial = propertiesIn.fadeInTime;
+			this.alpha = 0;
+		} else {
+			this.fadeInTime = 0;
+			this.fadeInTimeInitial = 0;
+		}
 		// If there is a sprite given, assign the sprite to this
-		if (propertiesIn.sprite != null) {
+		if (propertiesIn.sprite) {
 			this.requires("SpriteAnimation, " + propertiesIn.sprite);
 			// If the sprite is recognized here, it will automatically play the correct animation at creation
 			// ---- Recognized_Sprites_List ---- //
@@ -1058,23 +1116,18 @@ Crafty.c("Particle", {
 			}
 		}
 
+		this.curVel.x = propertiesIn.xVel;
+		this.curVel.y = propertiesIn.yVel;
+		this.rotationSpeed = propertiesIn.rotationSpeed;
+		this.collisionSetting = propertiesIn.collisionSetting;
+		this.gravityType = propertiesIn.gravityType;
+		this.expire = propertiesIn.expire;
+		this.lifeTime = propertiesIn.lifeTime;
 		this.x = propertiesIn.x - propertiesIn.w/2;
 		this.y = propertiesIn.y - propertiesIn.h/2;
 		this.w = propertiesIn.w;
 		this.h = propertiesIn.h;
 		this.origin("center");
-		this.rotationSpeed = propertiesIn.rotationSpeed;
-		this.collisionSetting = propertiesIn.collSetting;
-		this.gravityType = propertiesIn.gravityType;
-		this.expire = propertiesIn.expire;
-		this.lifeTime = propertiesIn.lifeTime;
-		this.fadeOutTime = propertiesIn.fadeOutTime;
-		this.fadeInTime = propertiesIn.fadeInTime;
-		this.fadeOutTimeInitial = propertiesIn.fadeOutTime;
-		this.fadeInTimeInitial = propertiesIn.fadeInTime;
-		if (this.fadeInTime > 0) {
-			this.alpha = 0;
-		}
 	},
 });
 
@@ -1298,7 +1351,7 @@ Crafty.c("Spike_Ball_01", {
 			yVel = this.curVel.y;
 
 		this.dustEmitCount = 3;
-		this.dustEmitterSettings = { emitW: (60 * worldScale), emitH: (60 * worldScale), emitDir: "randomVerticalBurst", rotationSpeed: 45, emitStrength: 1, gravityType: "decelerate", emitCollSetting: "noCollide", emitExpire: true, emitLifeTime: 500, sprite: "spr_dust_01", fadeInTime: 500, fadeOutTime: 800 };
+		this.dustEmitterSettings = { emitW: 60, emitH: 60, rotationSpeed: 45, gravityType: "decelerate", emitCollSetting: "noCollide", emitExpire: true, emitLifeTime: 500, sprite: "spr_dust_01", fadeInTime: 500, fadeOutTime: 800 };
 		// Special case check for rolling spikeBalls, they should only start rolling as soon as they hit the floor
 		if (this.collType == "roll") {
 			if (this.hasImpacted == false) {
@@ -1308,29 +1361,38 @@ Crafty.c("Spike_Ball_01", {
 		}
 
 		// ---- Wall_L ---- //
-		if (objDirType == "isWallL") { // SolidBlocks
+		if (objDirType == "isWallL") {
+			// General settings
+			this.dustEmitter.posOffset = {x: this.w, y: this.h/2};
+			this.dustEmitterSettings.emitVel = { xMin: 0, xMax: 1, yMin: 60, yMax: 80 };
+			this.dustEmitterSettings.emitRandNegX = false;
+			this.dustEmitterSettings.emitRandNegY = true;
+			// Specific settings
 			this.curVel.x = -xVel;
 			this.x = objL - this.w;
-
-			this.dustEmitter.posOffset = {x: 0, y: this.h/2};
-			this.dustEmitterSettings.emitDir = "randomVerticalBurst";
 			this.dustEmitter.emitParticles( this.dustEmitterSettings, 1, this.dustEmitCount);
 		// ---- Wall_R ---- //
 		} else if (objDirType == "isWallR") {
+			// General settings
+			this.dustEmitter.posOffset = {x: 0, y: this.h/2};
+			this.dustEmitterSettings.emitVel = { xMin: 0, xMax: 1, yMin: 60, yMax: 80 };
+			this.dustEmitterSettings.emitRandNegX = false;
+			this.dustEmitterSettings.emitRandNegY = true;
+			// Specific settings
 			this.curVel.x = -xVel;
 			this.x = objR;
-
-			this.dustEmitter.posOffset = {x: this.w, y: this.h/2};
-			this.dustEmitterSettings.emitDir = "randomVerticalBurst";
 			this.dustEmitter.emitParticles( this.dustEmitterSettings, 1, this.dustEmitCount);
 		// ---- Ceiling ---- //
 		} else if (objDirType == "isCeiling") {
+			// General settings
+			this.dustEmitter.posOffset = {x: this.w/2, y: 0};
+			this.dustEmitterSettings.emitVel = { xMin: 60, xMax: 80, yMin: 0, yMax: 1 };
+			this.dustEmitterSettings.emitRandNegX = false;
+			this.dustEmitterSettings.emitRandNegY = true;
+			// Specific settings
 			if (this.collType == "float") {
 				this.curVel.y = -yVel;
 				this.y = objB;
-
-				this.dustEmitter.posOffset = {x: this.w/2, y: 0};
-				this.dustEmitterSettings.emitDir = "randomHorizontalBurst";
 				this.dustEmitter.emitParticles( this.dustEmitterSettings, 1, this.dustEmitCount);
 			} else if (this.collType == "roll") {
 				this.curVel.y = 0;
@@ -1338,24 +1400,22 @@ Crafty.c("Spike_Ball_01", {
 			} else if (this.collType == "bounce") {
 				this.curVel.y = 0;
 				this.y = objB;
-
-				this.dustEmitter.posOffset = {x: this.w/2, y: 0};
-				this.dustEmitterSettings.emitDir = "randomHorizontalBurst";
 				this.dustEmitter.emitParticles( this.dustEmitterSettings, 1, this.dustEmitCount);
 			}
 		// ---- Floor ---- //
 		} else if (objDirType == "isFloor") {
+			// General settings
+			this.dustEmitter.posOffset = {x: this.w/2, y: this.h};
+			this.dustEmitterSettings.emitVel = { xMin: 60, xMax: 80, yMin: 0, yMax: 1 };
+			this.dustEmitterSettings.emitRandNegX = false;
+			this.dustEmitterSettings.emitRandNegY = true;
+			// Specific settings
 			if (this.collType == "float") {
 				this.curVel.y = -yVel;
 				this.y = objT - this.h;
-
-				this.dustEmitter.posOffset = {x: this.w/2, y: this.h};
-				this.dustEmitterSettings.emitDir = "randomHorizontalBurst";
 				this.dustEmitter.emitParticles( this.dustEmitterSettings, 1, this.dustEmitCount);
 			} else if (this.collType == "roll") {
 				if (yVel > 400) {
-					this.dustEmitter.posOffset = {x: this.w/2, y: this.h};
-					this.dustEmitterSettings.emitDir = "randomHorizontalBurst";
 					this.dustEmitter.emitParticles( this.dustEmitterSettings, 1, this.dustEmitCount);
 				}
 				this.curVel.y = 0;
@@ -1363,20 +1423,20 @@ Crafty.c("Spike_Ball_01", {
 			} else if (this.collType == "bounce") {
 				this.curVel.y = this.bounceImpulse;
 				this.y = objT - this.h;
-
-				this.dustEmitter.posOffset = {x: this.w/2, y: this.h};
-				this.dustEmitterSettings.emitDir = "randomHorizontalBurst";
 				this.dustEmitter.emitParticles( this.dustEmitterSettings, 1, this.dustEmitCount);
 			}
 
 		// ---- Ramp_BL ---- //
-		} else if (objDirType == "isRampBL") { // Ramps
+		} else if (objDirType == "isRampBL") {
+			// General settings
+			this.dustEmitter.posOffset = {x: 0, y: this.h};
+			this.dustEmitterSettings.emitVel = { xMin: 30, xMax: 80, yMin: 30, yMax: 80 };
+			this.dustEmitterSettings.emitRandNegX = false;
+			this.dustEmitterSettings.emitRandNegY = false;
+			// Specific settings
 			if (this.collType == "float") {
 				this.curVel.x = yVel;
 				this.curVel.y = xVel;
-
-				this.dustEmitter.posOffset = {x: 0, y: this.h};
-				this.dustEmitterSettings.emitDir = "randomHorizontalBurst";
 				this.dustEmitter.emitParticles( this.dustEmitterSettings, 1, this.dustEmitCount);
 			} else if (this.collType == "roll") {
 				if (xVel < 0) {
@@ -1385,8 +1445,6 @@ Crafty.c("Spike_Ball_01", {
 					}
 				}
 				if (yVel > 400) {
-					this.dustEmitter.posOffset = {x: 0, y: this.h};
-					this.dustEmitterSettings.emitDir = "randomHorizontalBurst";
 					this.dustEmitter.emitParticles( this.dustEmitterSettings, 1, this.dustEmitCount);
 				}
 				this.curVel.y = 0;
@@ -1395,20 +1453,20 @@ Crafty.c("Spike_Ball_01", {
 					this.curVel.x = -xVel;
 				}
 				this.curVel.y = this.bounceImpulse;
-
-				this.dustEmitter.posOffset = {x: 0, y: this.h};
-				this.dustEmitterSettings.emitDir = "randomHorizontalBurst";
 				this.dustEmitter.emitParticles( this.dustEmitterSettings, 1, this.dustEmitCount);
 			}
 			this.y = obj.getyLinF(this.x + this.curVel.x * this.milliDT) - this.h;
 		// ---- Ramp_BR ---- //
 		} else if (objDirType == "isRampBR") {
+			// General settings
+			this.dustEmitter.posOffset = {x: this.w, y: this.h};
+			this.dustEmitterSettings.emitVel = { xMin: -30, xMax: -80, yMin: 30, yMax: 80 };
+			this.dustEmitterSettings.emitRandNegX = false;
+			this.dustEmitterSettings.emitRandNegY = false;
+			// Specific settings
 			if (this.collType == "float") {
 				this.curVel.x = -yVel;
 				this.curVel.y = -xVel;
-
-				this.dustEmitter.posOffset = {x: this.w, y: this.h};
-				this.dustEmitterSettings.emitDir = "randomHorizontalBurst";
 				this.dustEmitter.emitParticles( this.dustEmitterSettings, 1, this.dustEmitCount);
 			} else if (this.collType == "roll") {
 				if (xVel > 0) {
@@ -1417,59 +1475,54 @@ Crafty.c("Spike_Ball_01", {
 					}
 				}
 				if (yVel > 400) {
-					this.dustEmitter.posOffset = {x: this.w, y: this.h};
-					this.dustEmitterSettings.emitDir = "randomHorizontalBurst";
 					this.dustEmitter.emitParticles( this.dustEmitterSettings, 1, this.dustEmitCount);
 				}
 				this.curVel.y = 0;
 			} else if (this.collType == "bounce") {
-				if (xVel < 0) {
+				if (xVel > 0) {
 					this.curVel.x = -xVel;
 				}
 				this.curVel.y = this.bounceImpulse;
-
-				this.dustEmitter.posOffset = {x: this.w, y: this.h};
-				this.dustEmitterSettings.emitDir = "randomHorizontalBurst";
 				this.dustEmitter.emitParticles( this.dustEmitterSettings, 1, this.dustEmitCount);
 			}
 			this.y = obj.getyLinF(this.x + this.w + this.curVel.x * this.milliDT) - this.h;
 		// ---- Ramp_TL ---- //
 		} else if (objDirType == "isRampTL") {
+			// General settings
+			this.dustEmitter.posOffset = {x: 0, y: 0};
+			this.dustEmitterSettings.emitVel = { xMin: 60, xMax: 80, yMin: -60, yMax: -80 };
+			this.dustEmitterSettings.emitRandNegX = false;
+			this.dustEmitterSettings.emitRandNegY = false;
+			// Specific settings
 			if (this.collType == "float") {
 				this.curVel.x = -yVel;
 				this.curVel.y = -xVel;
-
-				this.dustEmitter.posOffset = {x: 0, y: 0};
-				this.dustEmitterSettings.emitDir = "randomHorizontalBurst";
 				this.dustEmitter.emitParticles( this.dustEmitterSettings, 1, this.dustEmitCount);
 			} else if (this.collType == "roll") {
 				// 
 			} else if (this.collType == "bounce") {
 				this.curVel.x = -xVel;
 				this.curVel.y = 0;
-
-				this.dustEmitter.posOffset = {x: 0, y: 0};
-				this.dustEmitterSettings.emitDir = "randomHorizontalBurst";
 				this.dustEmitter.emitParticles( this.dustEmitterSettings, 1, this.dustEmitCount);
 			}
 			this.y = obj.getyLinF(this.x + this.curVel.x * this.milliDT);
 		// ---- Ramp_TR ---- //
 		} else if (objDirType == "isRampTR") {
+			// General settings
+			this.dustEmitter.posOffset = {x: this.w, y: 0};
+			this.dustEmitterSettings.emitVel = { xMin: -60, xMax: -80, yMin: -60, yMax: -80 };
+			this.dustEmitterSettings.emitRandNegX = false;
+			this.dustEmitterSettings.emitRandNegY = false;
+			// Specific settings
 			if (this.collType == "float") {
 				this.curVel.x = yVel;
 				this.curVel.y = xVel;
-
-				this.dustEmitter.posOffset = {x: this.w, y: 0};
-				this.dustEmitterSettings.emitDir = "randomHorizontalBurst";
 				this.dustEmitter.emitParticles( this.dustEmitterSettings, 1, this.dustEmitCount);
 			} else if (this.collType == "roll") {
 				// 
 			} else if (this.collType == "bounce") {
 				this.curVel.x = -xVel;
 				this.curVel.y = 0;
-
-				this.dustEmitter.posOffset = {x: this.w, y: 0};
-				this.dustEmitterSettings.emitDir = "randomHorizontalBurst";
 				this.dustEmitter.emitParticles( this.dustEmitterSettings, 1, this.dustEmitCount);
 			}
 			this.y = obj.getyLinF(this.x + this.w + this.curVel.x * this.milliDT);
@@ -1886,22 +1939,28 @@ Crafty.c("ProjectileShooter", {
 // ------------- Projectile ------------- //
 Crafty.c("Projectile", {
 	init: function() {
-		this.requires("Actor, Entity, Collision, collisionDetection, SpriteAnimation, spr_projectile_01")
+		this.requires("Actor, Entity, Collision, Delay, collisionDetection, spr_projectile_01")
 			.attr({ w: (50 * worldScale), h: (50 * worldScale) });
 		this.origin("center");
 		this.onHit("PC", function(collData) {
 			var curObj = collData[0].obj;
 			curObj.die();
+			this.die();
 		}, function() {
 			// 
 		});
 		this.lifeTime = 0;
 		this.curVel = { x: 0, y: 0 };
 		this.broadphasebox = {x: 0, y: 0, w: 0, h: 0 };
+		this.isDead = false;
 
 		this.deathEmitter = Crafty.e("Particle_Emitter");
 		this.deathEmitter.movParent = this;
-		this.deathEmitter.posOffset = {x: this.w, y: this.h/2};
+		// this.deathEmitter.posOffset = {x: 0, y: this.h/2};
+
+		this.tailEmitter = Crafty.e("Particle_Emitter");
+		this.tailEmitter.movParent = this;
+		this.tailEmitter.posOffset = {x: this.w, y: this.h/2};
 
 		this.bind("EnterFrame", function(frameData) {
 			this.milliDT = (frameData.dt/1000);
@@ -1924,6 +1983,8 @@ Crafty.c("Projectile", {
 				}
 			}
 
+			this.deathEmitter.posOffset = { x: this.w, y: this.h/2 };
+
 			// Apply velocities
 			this.x += (this.curVel.x * worldScale) * this.milliDT;
 			this.y += (this.curVel.y * worldScale) * this.milliDT;
@@ -1931,6 +1992,18 @@ Crafty.c("Projectile", {
 	},
 
 	respondToCollision: function(obj, objDirType) {
-		this.destroy();
+		this.die();
+	},
+
+	die: function() {
+		if (this.isDead == false) {
+			this.isDead = true;
+			this.deathEmitterSettings = { emitW: (40 * worldScale), emitH: (60 * worldScale), emitVel: { xMin: -80, xMax: -10, yMin: 60, yMax: 80 }, emitRandNegY: true, gravityType: "decelerate", emitExpire: true, emitLifeTime: 1000, sprite: "spr_glowRed_01", fadeOutTime: 1000 };
+			this.deathEmitter.emitParticles( this.deathEmitterSettings, 1, 6);
+
+			this.delay(function() {
+				this.destroy();
+			}, 100, 0);
+		}
 	},
 });

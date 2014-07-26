@@ -13,7 +13,9 @@ var tileSize = {w: (90 * worldScale), h: (90 * worldScale)},
 	solidRampList = [],
 	solidRampListIndex = 0,
 	entitiesList = [],
-	entitiesListIndex = 0;
+	entitiesListIndex = 0,
+	hazardClipList = [],
+	hazardClipListIndex = 0;
 
 // -------------------- Init_Level -------------------- //
 function initLevel(levelNum) {
@@ -65,6 +67,17 @@ function initLevel(levelNum) {
 						.attr({ x: tileX, y: (tileY+tileSize.h) - (200 * worldScale) });
 						entitiesList[entitiesListIndex].setProperties({  });
 					entitiesListIndex++;
+					break;
+				// ------ JumpPad ------ //
+				case 8:
+					entitiesList[entitiesListIndex] = Crafty.e("JumpPad")
+						.attr({ x: tileX, y: tileY , w: tileSize.w, h: tileSize.h });
+						entitiesList[entitiesListIndex].setProperties({  });
+					entitiesListIndex++;
+					break;
+				// ------ HazardClip ------ //
+				case 9:
+					addHazardClip(tileX, tileY);
 					break;
 				// ------ Spike_Ball_01 ------ //
 				case 20: // float, right
@@ -142,13 +155,6 @@ function initLevel(levelNum) {
 					entitiesList[entitiesListIndex].setProperties({ rotationDir: "counterClockwise", radiusMultiplier: 2 });
 					entitiesListIndex++;
 					break;
-				// ------ JumpPad ------ //
-				case 8:
-					entitiesList[entitiesListIndex] = Crafty.e("JumpPad")
-						.attr({ x: tileX, y: tileY , w: tileSize.w, h: tileSize.h });
-						entitiesList[entitiesListIndex].setProperties({  });
-					entitiesListIndex++;
-					break;
 				// ------ ProjectileShooter ------ //
 				case 30: // left
 					entitiesList[entitiesListIndex] = Crafty.e("ProjectileShooter")
@@ -216,6 +222,12 @@ function addSolidBlock(xIn, yIn) {
 	solidBlockList[solidBlockListIndex] = Crafty.e("SolidBlock_backGround")
 		.attr({ x: xIn, y: yIn, w: tileSize.w+1, h: tileSize.h+1 });
 	solidBlockListIndex++;
+};
+
+function addHazardClip(xIn, yIn) {
+	hazardClipList[hazardClipListIndex] = Crafty.e("ClipBlock_Hazard")
+		.attr({ x: xIn, y: yIn, w: tileSize.w+1, h: tileSize.h+1 });
+	hazardClipListIndex++;
 };
 
 // -------------------- Solids_Collision_Booleans -------------------- //
