@@ -12,6 +12,38 @@
 Crafty.c("collisionDetection", {
 	init: function() {
 		this.lastCollObj = "floor";
+
+		this.bind("EnterFrame", function(frameData) {
+			// ------------ Collision_Detection ------------ //
+			// ---- solidBlocks ---- //
+			this.updateBroadphasebox(this.milliDT);
+			for (var i = solidBlockList.length-1; i > -1; --i) {
+				var tile = solidBlockList[i];
+				if (tile.x+tile.w > this.broadphasebox.x && tile.x < this.broadphasebox.x+this.broadphasebox.w) {
+					if (tile.y+tile.h > this.broadphasebox.y && tile.y < this.broadphasebox.y+this.broadphasebox.h) {
+						this.checkCollisionSweptAABB(tile, this.milliDT);
+					}
+				}
+			}
+			// ---- ramps ---- //
+			for (var i = solidRampList.length-1; i > -1; --i) {
+				var rampTile = solidRampList[i];
+				if (rampTile.x+rampTile.w > this.broadphasebox.x && rampTile.x < this.broadphasebox.x+this.broadphasebox.w) {
+					if (rampTile.y+rampTile.h > this.broadphasebox.y && rampTile.y < this.broadphasebox.y+this.broadphasebox.h) {
+						this.checkCollisionSweptRamp(rampTile, this.milliDT);
+					}
+				}
+			}
+			// ---- clips ---- //
+			for (var i = clipList.length-1; i > -1; --i) {
+				var clipTile = clipList[i];
+				if (clipTile.x+clipTile.w > this.broadphasebox.x && clipTile.x < this.broadphasebox.x+this.broadphasebox.w) {
+					if (clipTile.y+clipTile.h > this.broadphasebox.y && clipTile.y < this.broadphasebox.y+this.broadphasebox.h) {
+						this.checkCollisionSweptAABB(clipTile, this.milliDT);
+					}
+				}
+			}
+		});	
 	},
 
 	updateBroadphasebox: function(milliDT) {
@@ -471,7 +503,7 @@ Crafty.c("SolidBlock_ramp", {
 // -------- SolidBlock_trim -------- //
 Crafty.c("SolidBlock_trim", {
 	init: function() {
-		this.requires("Actor, Solid, Trim, SpriteAnimation, spr_solidBlocks_trims_02");
+		this.requires("Actor, Trim, SpriteAnimation, spr_solidBlocks_trims_02");
 		// ------ Define_Appearance ------ //
 		this.reel("solidBlock_brick", 2000, 0, 0, 12) // brick tileset
 		this.animate("solidBlock_brick", 1);
@@ -495,6 +527,30 @@ Crafty.c("SolidBlock_backGround", {
 	},
 });
 
+// -------- ClipBlock -------- //
+Crafty.c("ClipBlock", {
+	init: function() {
+		this.isFloor = true;
+		this.isCeiling = true;
+		this.isWallL = true;
+		this.isWallR = true;
+		this.isValid = true;
+		this.requires("Actor, Solid");
+	},
+});
+
+// -------- ClipBlock_Player -------- //
+Crafty.c("ClipBlock_Player", {
+	init: function() {
+		this.isFloor = true;
+		this.isCeiling = true;
+		this.isWallL = true;
+		this.isWallR = true;
+		this.isValid = true;
+		this.requires("Actor, Solid");
+	},
+});
+
 // -------- ClipBlock_Hazard -------- //
 Crafty.c("ClipBlock_Hazard", {
 	init: function() {
@@ -503,7 +559,7 @@ Crafty.c("ClipBlock_Hazard", {
 		this.isWallL = true;
 		this.isWallR = true;
 		this.isValid = true;
-		this.requires("Actor, HazardClip");
+		this.requires("Actor, Solid");
 	},
 });
 
@@ -639,7 +695,7 @@ Crafty.c("PC", {
 					var curObj = collData[n].obj;
 
 					// Make a distincion between the BackGround and Ramp solids, as their collisions are calculated differently
-					if (curObj.__c.BackGround) {
+					if (curObj.__c.BackGround || curObj.__c.ClipBlock_Player || curObj.__c.ClipBlock) {
 						this.color("blue");
 						collidedD = true;
 					} else if (curObj.__c.Ramp) {
@@ -647,9 +703,6 @@ Crafty.c("PC", {
 							this.color("blue");
 							collidedD = true;
 						}
-					} else {
-						this.color("red");
-						collidedD = false;
 					}
 				}
 			}, function() {
@@ -720,25 +773,6 @@ Crafty.c("PC", {
 					this.lastDir = "left";
 				}
 
-				// ---- Collision_Detection ---- //
-				this.updateBroadphasebox(this.milliDT);
-				for (var i = solidBlockList.length-1; i > -1; --i) {
-					var tile = solidBlockList[i];
-					if (tile.x+tile.w > this.broadphasebox.x && tile.x < this.broadphasebox.x+this.broadphasebox.w) {
-						if (tile.y+tile.h > this.broadphasebox.y && tile.y < this.broadphasebox.y+this.broadphasebox.h) {
-							this.checkCollisionSweptAABB(tile, this.milliDT);
-						}
-					}
-				}
-				for (var i = solidRampList.length-1; i > -1; --i) {
-					var rampTile = solidRampList[i];
-					if (rampTile.x+rampTile.w > this.broadphasebox.x && rampTile.x < this.broadphasebox.x+this.broadphasebox.w) {
-						if (rampTile.y+rampTile.h > this.broadphasebox.y && rampTile.y < this.broadphasebox.y+this.broadphasebox.h) {
-							this.checkCollisionSweptRamp(rampTile, this.milliDT);
-						}
-					}
-				}
-
 				// ------ Play_Animations ------ //
 				if (collidedD && !this.spriteObj.isPlaying("PC_Jump00r_st") && !this.spriteObj.isPlaying("PC_Jump00l_st")) {
 					if (this.curVel.x > 0 && !this.spriteObj.isPlaying("PC_Run00r")) {
@@ -765,22 +799,22 @@ Crafty.c("PC", {
 				}
 			}
 
-			this.idleTimer += 1000 * this.milliDT;
-			if (this.idleTimer >= 20000) {
-				if (this.isDead == false) {
-					this.spriteObj.animate("PC_Invisible", 1);
-					if (this.lastDir == "right") {
-						this.spriteObj2.animate("PC_IdleBored00r", 1);
-					} else if (this.lastDir == "left") {
-						this.spriteObj2.animate("PC_IdleBored00l", 1);
-					}
-				}
-			}
-			if (!this.spriteObj2.isPlaying("PC_IdleBored00r") && !this.spriteObj2.isPlaying("PC_IdleBored00l") || this.curVel.x != 0 || this.curVel.y != 0) {
-				this.spriteObj2.animate("PC_LongInvisible", 1);
-			} else {
-				this.idleTimer = 0;
-			}
+			// this.idleTimer += 1000 * this.milliDT;
+			// if (this.idleTimer >= 20000) {
+			// 	if (this.isDead == false) {
+			// 		this.spriteObj.animate("PC_Invisible", 1);
+			// 		if (this.lastDir == "right") {
+			// 			this.spriteObj2.animate("PC_IdleBored00r", 1);
+			// 		} else if (this.lastDir == "left") {
+			// 			this.spriteObj2.animate("PC_IdleBored00l", 1);
+			// 		}
+			// 	}
+			// }
+			// if (!this.spriteObj2.isPlaying("PC_IdleBored00r") && !this.spriteObj2.isPlaying("PC_IdleBored00l") || this.curVel.x != 0 || this.curVel.y != 0) {
+			// 	this.spriteObj2.animate("PC_LongInvisible", 1);
+			// } else {
+			// 	this.idleTimer = 0;
+			// }
 
 			// ------ Update_Hitbox ------ //
 			this.hitBox_down.x = (this.x + 2) + this.curVel.x * this.milliDT;
@@ -861,23 +895,27 @@ Crafty.c("PC", {
 			objT = obj.y,
 			objB = obj.y + obj.h;
 
-		if (objDirType == "isWallL") { // SolidBlocks
-			this.curVel.x = 0;
-			this.x = objL - this.w;
-		} else if (objDirType == "isWallR") {
-			this.curVel.x = 0;
-			this.x = objR;
-		} else if (objDirType == "isCeiling") {
-			this.curVel.y = 0;
-			this.y = objB;
-		} else if (objDirType == "isFloor") {
-			if (this.curVel.y > (500 * worldScale)) {
-				this.feetDustEmitter.emitParticles( this.feetDustEmitterSettings, 1, 5);
+		// ---- solidBlocks ---- //
+		if (obj.__c.SolidBlock_backGround || obj.__c.ClipBlock_Player || obj.__c.ClipBlock) {
+			if (objDirType == "isWallL") {
+				this.curVel.x = 0;
+				this.x = objL - this.w;
+			} else if (objDirType == "isWallR" && obj.__c.Solid) {
+				this.curVel.x = 0;
+				this.x = objR;
+			} else if (objDirType == "isCeiling" && obj.__c.Solid) {
+				this.curVel.y = 0;
+				this.y = objB;
+			} else if (objDirType == "isFloor" && obj.__c.Solid) {
+				if (this.curVel.y > (500 * worldScale)) {
+					this.feetDustEmitter.emitParticles( this.feetDustEmitterSettings, 1, 5);
+				}
+				this.curVel.y = 0;
+				this.y = objT - this.h;
 			}
-			this.curVel.y = 0;
-			this.y = objT - this.h;
-
-		} else if (objDirType == "isRampBL") { // Ramps
+		}
+		// ---- ramps ---- //
+		if (objDirType == "isRampBL") {
 			if (this.curVel.y > (500 * worldScale)) {
 				this.feetDustEmitter.emitParticles( this.feetDustEmitterSettings, 1, 5);
 			}
@@ -1256,25 +1294,6 @@ Crafty.c("Spike_Ball_01", {
 				this.curVel.y += (worldGravity * worldScale) * this.milliDT; //Gravity
 			}
 
-			// ---- Collision_Detection ---- //
-			this.updateBroadphasebox(this.milliDT);
-			for (var i = solidBlockList.length-1; i > -1; --i) {
-				var tile = solidBlockList[i];
-				if (tile.x+tile.w > this.broadphasebox.x && tile.x < this.broadphasebox.x+this.broadphasebox.w) {
-					if (tile.y+tile.h > this.broadphasebox.y && tile.y < this.broadphasebox.y+this.broadphasebox.h) {
-						this.checkCollisionSweptAABB(tile, this.milliDT);
-					}
-				}
-			}
-			for (var i = solidRampList.length-1; i > -1; --i) {
-				var rampTile = solidRampList[i];
-				if (rampTile.x+rampTile.w > this.broadphasebox.x && rampTile.x < this.broadphasebox.x+this.broadphasebox.w) {
-					if (rampTile.y+rampTile.h > this.broadphasebox.y && rampTile.y < this.broadphasebox.y+this.broadphasebox.h) {
-						this.checkCollisionSweptRamp(rampTile, this.milliDT);
-					}
-				}
-			}
-
 			// Apply spriteObj rotation
 			if (this.collType == "float") {
 				if (this.curVel.x > 0 || this.curVel.y < 0) {
@@ -1360,74 +1379,78 @@ Crafty.c("Spike_Ball_01", {
 			}
 		}
 
-		// ---- Wall_L ---- //
-		if (objDirType == "isWallL") {
-			// General settings
-			this.dustEmitter.posOffset = {x: this.w, y: this.h/2};
-			this.dustEmitterSettings.emitVel = { xMin: 0, xMax: 1, yMin: 60, yMax: 80 };
-			this.dustEmitterSettings.emitRandNegX = false;
-			this.dustEmitterSettings.emitRandNegY = true;
-			// Specific settings
-			this.curVel.x = -xVel;
-			this.x = objL - this.w;
-			this.dustEmitter.emitParticles( this.dustEmitterSettings, 1, this.dustEmitCount);
-		// ---- Wall_R ---- //
-		} else if (objDirType == "isWallR") {
-			// General settings
-			this.dustEmitter.posOffset = {x: 0, y: this.h/2};
-			this.dustEmitterSettings.emitVel = { xMin: 0, xMax: 1, yMin: 60, yMax: 80 };
-			this.dustEmitterSettings.emitRandNegX = false;
-			this.dustEmitterSettings.emitRandNegY = true;
-			// Specific settings
-			this.curVel.x = -xVel;
-			this.x = objR;
-			this.dustEmitter.emitParticles( this.dustEmitterSettings, 1, this.dustEmitCount);
-		// ---- Ceiling ---- //
-		} else if (objDirType == "isCeiling") {
-			// General settings
-			this.dustEmitter.posOffset = {x: this.w/2, y: 0};
-			this.dustEmitterSettings.emitVel = { xMin: 60, xMax: 80, yMin: 0, yMax: 1 };
-			this.dustEmitterSettings.emitRandNegX = false;
-			this.dustEmitterSettings.emitRandNegY = true;
-			// Specific settings
-			if (this.collType == "float") {
-				this.curVel.y = -yVel;
-				this.y = objB;
+		// ---- solidBlocks ---- //
+		if (obj.__c.SolidBlock_backGround || obj.__c.ClipBlock_Hazard || obj.__c.ClipBlock) {
+			// ---- Wall_L ---- //
+			if (objDirType == "isWallL") {
+				// General settings
+				this.dustEmitter.posOffset = {x: this.w, y: this.h/2};
+				this.dustEmitterSettings.emitVel = { xMin: 0, xMax: 1, yMin: 60, yMax: 80 };
+				this.dustEmitterSettings.emitRandNegX = false;
+				this.dustEmitterSettings.emitRandNegY = true;
+				// Specific settings
+				this.curVel.x = -xVel;
+				this.x = objL - this.w;
 				this.dustEmitter.emitParticles( this.dustEmitterSettings, 1, this.dustEmitCount);
-			} else if (this.collType == "roll") {
-				this.curVel.y = 0;
-				this.y = objB;
-			} else if (this.collType == "bounce") {
-				this.curVel.y = 0;
-				this.y = objB;
+			// ---- Wall_R ---- //
+			} else if (objDirType == "isWallR") {
+				// General settings
+				this.dustEmitter.posOffset = {x: 0, y: this.h/2};
+				this.dustEmitterSettings.emitVel = { xMin: 0, xMax: 1, yMin: 60, yMax: 80 };
+				this.dustEmitterSettings.emitRandNegX = false;
+				this.dustEmitterSettings.emitRandNegY = true;
+				// Specific settings
+				this.curVel.x = -xVel;
+				this.x = objR;
 				this.dustEmitter.emitParticles( this.dustEmitterSettings, 1, this.dustEmitCount);
-			}
-		// ---- Floor ---- //
-		} else if (objDirType == "isFloor") {
-			// General settings
-			this.dustEmitter.posOffset = {x: this.w/2, y: this.h};
-			this.dustEmitterSettings.emitVel = { xMin: 60, xMax: 80, yMin: 0, yMax: 1 };
-			this.dustEmitterSettings.emitRandNegX = false;
-			this.dustEmitterSettings.emitRandNegY = true;
-			// Specific settings
-			if (this.collType == "float") {
-				this.curVel.y = -yVel;
-				this.y = objT - this.h;
-				this.dustEmitter.emitParticles( this.dustEmitterSettings, 1, this.dustEmitCount);
-			} else if (this.collType == "roll") {
-				if (yVel > 400) {
+			// ---- Ceiling ---- //
+			} else if (objDirType == "isCeiling") {
+				// General settings
+				this.dustEmitter.posOffset = {x: this.w/2, y: 0};
+				this.dustEmitterSettings.emitVel = { xMin: 60, xMax: 80, yMin: 0, yMax: 1 };
+				this.dustEmitterSettings.emitRandNegX = false;
+				this.dustEmitterSettings.emitRandNegY = true;
+				// Specific settings
+				if (this.collType == "float") {
+					this.curVel.y = -yVel;
+					this.y = objB;
+					this.dustEmitter.emitParticles( this.dustEmitterSettings, 1, this.dustEmitCount);
+				} else if (this.collType == "roll") {
+					this.curVel.y = 0;
+					this.y = objB;
+				} else if (this.collType == "bounce") {
+					this.curVel.y = 0;
+					this.y = objB;
 					this.dustEmitter.emitParticles( this.dustEmitterSettings, 1, this.dustEmitCount);
 				}
-				this.curVel.y = 0;
-				this.y = objT - this.h;
-			} else if (this.collType == "bounce") {
-				this.curVel.y = this.bounceImpulse;
-				this.y = objT - this.h;
-				this.dustEmitter.emitParticles( this.dustEmitterSettings, 1, this.dustEmitCount);
+			// ---- Floor ---- //
+			} else if (objDirType == "isFloor") {
+				// General settings
+				this.dustEmitter.posOffset = {x: this.w/2, y: this.h};
+				this.dustEmitterSettings.emitVel = { xMin: 60, xMax: 80, yMin: 0, yMax: 1 };
+				this.dustEmitterSettings.emitRandNegX = false;
+				this.dustEmitterSettings.emitRandNegY = true;
+				// Specific settings
+				if (this.collType == "float") {
+					this.curVel.y = -yVel;
+					this.y = objT - this.h;
+					this.dustEmitter.emitParticles( this.dustEmitterSettings, 1, this.dustEmitCount);
+				} else if (this.collType == "roll") {
+					if (yVel > 400) {
+						this.dustEmitter.emitParticles( this.dustEmitterSettings, 1, this.dustEmitCount);
+					}
+					this.curVel.y = 0;
+					this.y = objT - this.h;
+				} else if (this.collType == "bounce") {
+					this.curVel.y = this.bounceImpulse;
+					this.y = objT - this.h;
+					this.dustEmitter.emitParticles( this.dustEmitterSettings, 1, this.dustEmitCount);
+				}
 			}
-
+		}
+		// ---- Ramps ---- //
 		// ---- Ramp_BL ---- //
-		} else if (objDirType == "isRampBL") {
+		if (objDirType == "isRampBL") {
 			// General settings
 			this.dustEmitter.posOffset = {x: 0, y: this.h};
 			this.dustEmitterSettings.emitVel = { xMin: 30, xMax: 80, yMin: 30, yMax: 80 };
@@ -1964,24 +1987,6 @@ Crafty.c("Projectile", {
 
 		this.bind("EnterFrame", function(frameData) {
 			this.milliDT = (frameData.dt/1000);
-			// ---- Collision_Detection ---- //
-			this.updateBroadphasebox(this.milliDT);
-			for (var i = solidBlockList.length-1; i > -1; --i) {
-				var tile = solidBlockList[i];
-				if (tile.x+tile.w > this.broadphasebox.x && tile.x < this.broadphasebox.x+this.broadphasebox.w) {
-					if (tile.y+tile.h > this.broadphasebox.y && tile.y < this.broadphasebox.y+this.broadphasebox.h) {
-						this.checkCollisionSweptAABB(tile, this.milliDT);
-					}
-				}
-			}
-			for (var i = solidRampList.length-1; i > -1; --i) {
-				var rampTile = solidRampList[i];
-				if (rampTile.x+rampTile.w > this.broadphasebox.x && rampTile.x < this.broadphasebox.x+this.broadphasebox.w) {
-					if (rampTile.y+rampTile.h > this.broadphasebox.y && rampTile.y < this.broadphasebox.y+this.broadphasebox.h) {
-						this.checkCollisionSweptRamp(rampTile, this.milliDT);
-					}
-				}
-			}
 
 			this.deathEmitter.posOffset = { x: this.w, y: this.h/2 };
 

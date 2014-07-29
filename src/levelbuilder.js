@@ -14,8 +14,8 @@ var tileSize = {w: (90 * worldScale), h: (90 * worldScale)},
 	solidRampListIndex = 0,
 	entitiesList = [],
 	entitiesListIndex = 0,
-	hazardClipList = [],
-	hazardClipListIndex = 0;
+	clipList = [],
+	clipListIndex = 0;
 
 // -------------------- Init_Level -------------------- //
 function initLevel(levelNum) {
@@ -75,9 +75,17 @@ function initLevel(levelNum) {
 						entitiesList[entitiesListIndex].setProperties({  });
 					entitiesListIndex++;
 					break;
-				// ------ HazardClip ------ //
+				// ------ PlayerClip ------ //
 				case 9:
-					addHazardClip(tileX, tileY);
+					addPlayerClip(tileX, tileY, {  });
+					break;
+				// ------ HazardClip ------ //
+				case 10:
+					addHazardClip(tileX, tileY, {  });
+					break;
+				// ------ Clip ------ //
+				case 11:
+					addClip(tileX, tileY, {  });
 					break;
 				// ------ Spike_Ball_01 ------ //
 				case 20: // float, right
@@ -160,24 +168,28 @@ function initLevel(levelNum) {
 					entitiesList[entitiesListIndex] = Crafty.e("ProjectileShooter")
 						.attr({ x: tileX, y: tileY });
 					entitiesList[entitiesListIndex].setProperties({ direction: "left" });
+					addPlayerClip(tileX, tileY, { isWallR: false });
 					entitiesListIndex++;
 					break;
 				case 31: // right
 					entitiesList[entitiesListIndex] = Crafty.e("ProjectileShooter")
 						.attr({ x: tileX, y: tileY });
 					entitiesList[entitiesListIndex].setProperties({ direction: "right" });
+					addPlayerClip(tileX, tileY, { isWallL: false });
 					entitiesListIndex++;
 					break;
 				case 32: // up
 					entitiesList[entitiesListIndex] = Crafty.e("ProjectileShooter")
 						.attr({ x: tileX, y: tileY });
 					entitiesList[entitiesListIndex].setProperties({ direction: "up" });
+					addPlayerClip(tileX, tileY, { isCeiling: false });
 					entitiesListIndex++;
 					break;
 				case 33: // down
 					entitiesList[entitiesListIndex] = Crafty.e("ProjectileShooter")
 						.attr({ x: tileX, y: tileY });
 					entitiesList[entitiesListIndex].setProperties({ direction: "down" });
+					addPlayerClip(tileX, tileY, { isFloor: false });
 					entitiesListIndex++;
 					break;
 				// ------ SpikeBallLauncher_01 ------ //
@@ -224,10 +236,49 @@ function addSolidBlock(xIn, yIn) {
 	solidBlockListIndex++;
 };
 
-function addHazardClip(xIn, yIn) {
-	hazardClipList[hazardClipListIndex] = Crafty.e("ClipBlock_Hazard")
+function addClip(xIn, yIn, settingsIn) {
+	clipList[clipListIndex] = Crafty.e("ClipBlock")
 		.attr({ x: xIn, y: yIn, w: tileSize.w+1, h: tileSize.h+1 });
-	hazardClipListIndex++;
+	if (settingsIn.isCeiling == false) {
+		clipList[clipListIndex].isCeiling = false;
+	} else if (settingsIn.isFloor == false) {
+		clipList[clipListIndex].isFloor = false;
+	} else if (settingsIn.isWallL == false) {
+		clipList[clipListIndex].isWallL = false;
+	} else if (settingsIn.isWallR == false) {
+		clipList[clipListIndex].isWallR = false;
+	}
+	clipListIndex++;
+};
+
+function addPlayerClip(xIn, yIn, settingsIn) {
+	clipList[clipListIndex] = Crafty.e("ClipBlock_Player")
+		.attr({ x: xIn, y: yIn, w: tileSize.w+1, h: tileSize.h+1 });
+	if (settingsIn.isCeiling == false) {
+		clipList[clipListIndex].isCeiling = false;
+	} else if (settingsIn.isFloor == false) {
+		clipList[clipListIndex].isFloor = false;
+	} else if (settingsIn.isWallL == false) {
+		clipList[clipListIndex].isWallL = false;
+	} else if (settingsIn.isWallR == false) {
+		clipList[clipListIndex].isWallR = false;
+	}
+	clipListIndex++;
+};
+
+function addHazardClip(xIn, yIn, settingsIn) {
+	clipList[clipListIndex] = Crafty.e("ClipBlock_Hazard")
+		.attr({ x: xIn, y: yIn, w: tileSize.w+1, h: tileSize.h+1 });
+	if (settingsIn.isCeiling == false) {
+		clipList[clipListIndex].isCeiling = false;
+	} else if (settingsIn.isFloor == false) {
+		clipList[clipListIndex].isFloor = false;
+	} else if (settingsIn.isWallL == false) {
+		clipList[clipListIndex].isWallL = false;
+	} else if (settingsIn.isWallR == false) {
+		clipList[clipListIndex].isWallR = false;
+	}
+	clipListIndex++;
 };
 
 // -------------------- Solids_Collision_Booleans -------------------- //
