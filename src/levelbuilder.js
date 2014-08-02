@@ -192,17 +192,54 @@ function initLevel(levelNum) {
 					addPlayerClip(tileX, tileY, { isFloor: false });
 					entitiesListIndex++;
 					break;
+				case 34: // chase, left
+					entitiesList[entitiesListIndex] = Crafty.e("ProjectileShooter")
+						.attr({ x: tileX, y: tileY });
+					entitiesList[entitiesListIndex].setProperties({ direction: "left", projectileType: "chase" });
+					addPlayerClip(tileX, tileY, { isWallR: false });
+					entitiesListIndex++;
+					break;
+				case 35: // chase, right
+					entitiesList[entitiesListIndex] = Crafty.e("ProjectileShooter")
+						.attr({ x: tileX, y: tileY });
+					entitiesList[entitiesListIndex].setProperties({ direction: "right", projectileType: "chase" });
+					addPlayerClip(tileX, tileY, { isWallL: false });
+					entitiesListIndex++;
+					break;
+				case 36: // chase, up
+					entitiesList[entitiesListIndex] = Crafty.e("ProjectileShooter")
+						.attr({ x: tileX, y: tileY });
+					entitiesList[entitiesListIndex].setProperties({ direction: "up", projectileType: "chase" });
+					addPlayerClip(tileX, tileY, { isCeiling: false });
+					entitiesListIndex++;
+					break;
+				case 37: // chase, down
+					entitiesList[entitiesListIndex] = Crafty.e("ProjectileShooter")
+						.attr({ x: tileX, y: tileY });
+					entitiesList[entitiesListIndex].setProperties({ direction: "down", projectileType: "chase" });
+					addPlayerClip(tileX, tileY, { isFloor: false });
+					entitiesListIndex++;
+					break;
 				// ------ SpikeBallLauncher_01 ------ //
 				case 40: // roll, left
 					entitiesList[entitiesListIndex] = Crafty.e("Spike_Ball_Launcher_01")
 						.attr({ x: tileX, y: tileY });
 					entitiesList[entitiesListIndex].setProperties({ direction: "left", collType: "roll", postImpactVel: { x: -200, y: 0 } });
+					addPlayerClip(tileX, tileY, { isFloor: false, w: entitiesList[entitiesListIndex].w, h: entitiesList[entitiesListIndex].h });
 					entitiesListIndex++;
 					break;
 				case 41: // roll, right
 					entitiesList[entitiesListIndex] = Crafty.e("Spike_Ball_Launcher_01")
 						.attr({ x: tileX, y: tileY });
 					entitiesList[entitiesListIndex].setProperties({ direction: "right", collType: "roll", postImpactVel: { x: 200, y: 0 } });
+					addPlayerClip(tileX, tileY, { isFloor: false, w: entitiesList[entitiesListIndex].w, h: entitiesList[entitiesListIndex].h });
+					entitiesListIndex++;
+					break;
+				// ------ Crusher_01 ------ //
+				case 42: // crushing down
+					entitiesList[entitiesListIndex] = Crafty.e("Crusher_01")
+						.attr({ x: tileX, y: tileY });
+					entitiesList[entitiesListIndex].setProperties({ direction: "down" });
 					entitiesListIndex++;
 					break;
 				default:
@@ -262,6 +299,12 @@ function addPlayerClip(xIn, yIn, settingsIn) {
 		clipList[clipListIndex].isWallL = false;
 	} else if (settingsIn.isWallR == false) {
 		clipList[clipListIndex].isWallR = false;
+	}
+	if (settingsIn.w) {
+		clipList[clipListIndex].w = settingsIn.w;
+	}
+	if (settingsIn.h) {
+		clipList[clipListIndex].h = settingsIn.h;
 	}
 	clipListIndex++;
 };

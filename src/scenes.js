@@ -31,6 +31,7 @@ Crafty.defineScene("loading", function() {
 		"assets/SpikeBallChain_02.png",
 		"assets/SpikeBallLauncher_01.png",
 		"assets/glow_red.png",
+		"assets/crusher_01.png",
 		], function(){ // Things to do after all files have been loaded
 			
 			// -------- Define_Sprite_Maps -------- //
@@ -90,6 +91,10 @@ Crafty.defineScene("loading", function() {
 			// ---- Projectile_01 ---- //
 			Crafty.sprite(200, 200, "assets/Projectile_01.png", {
 				spr_projectile_01: [0, 0]
+			});
+			// ---- Projectile_01 ---- //
+			Crafty.sprite(180, 180, "assets/crusher_01.png", {
+				spr_crusher_01: [0, 0]
 			});
 
 			// ---- General_Effects ---- //

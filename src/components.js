@@ -12,6 +12,7 @@
 Crafty.c("collisionDetection", {
 	init: function() {
 		this.lastCollObj = "floor";
+		this.broadphasebox = {x: 0, y: 0, w: 0, h: 0 };
 
 		this.bind("EnterFrame", function(frameData) {
 			// ------------ Collision_Detection ------------ //
@@ -382,12 +383,12 @@ Crafty.c("SprLocOffset", {
 			this.offset.x = (this.w - this.movParent.w) / 2;
 			this.offset.y = (this.h - this.movParent.h) / 2;
 		} else {
-			console.log("No movparent for PC_Sprite, can't set offset!");
+			console.log("No movparent for sprite, can't set offset!");
 		}
 	},
 });
 
-// ---- Calculate_Rotation_Point ---- //
+// ---- HelperMaths ---- //
 Crafty.c("HelperMaths", {
 	getPointOnCirlce: function(originPointIn, curPointIn, curAngleIn) {
 		var resultPoint = { x: 0, y: 0 };
@@ -657,12 +658,11 @@ Crafty.c("PC", {
 		
 		this.jumpImpulse = (-620 * worldScale);
 		this.curVel = { x: 0, y: 0 };
-		this.broadphasebox = {x: 0, y: 0, w: 0, h: 0 };
 		this.lastDir = "right";
 		this.resetPosCoords = { x: 0, y: 0 };
 		this.isDead = false;
 		this.canJump = true;
-		this.idleTimer = 0;
+		this.idleTime = 0;
 
 		var collidedD = false;
 
@@ -712,7 +712,7 @@ Crafty.c("PC", {
 
 		// ------ Key_inputs ------ //
 		this.bind("KeyDown", function(e) {
-			this.idleTimer = 0;
+			this.idleTime = 0;
 			if (!this.isDead) {
 				if (e.key == Crafty.keys.SPACE && collidedD == true)  {
 					this.jump(this.jumpImpulse);
@@ -724,7 +724,7 @@ Crafty.c("PC", {
 			}
 		});
 		this.bind("KeyUp", function(e) {
-			this.idleTimer = 0;
+			this.idleTime = 0;
 			if (!this.isDead) {
 				if (e.key == Crafty.keys.SPACE) {
 					if (this.curVel.y < 0) {
@@ -799,22 +799,22 @@ Crafty.c("PC", {
 				}
 			}
 
-			// this.idleTimer += 1000 * this.milliDT;
-			// if (this.idleTimer >= 20000) {
-			// 	if (this.isDead == false) {
-			// 		this.spriteObj.animate("PC_Invisible", 1);
-			// 		if (this.lastDir == "right") {
-			// 			this.spriteObj2.animate("PC_IdleBored00r", 1);
-			// 		} else if (this.lastDir == "left") {
-			// 			this.spriteObj2.animate("PC_IdleBored00l", 1);
-			// 		}
-			// 	}
-			// }
-			// if (!this.spriteObj2.isPlaying("PC_IdleBored00r") && !this.spriteObj2.isPlaying("PC_IdleBored00l") || this.curVel.x != 0 || this.curVel.y != 0) {
-			// 	this.spriteObj2.animate("PC_LongInvisible", 1);
-			// } else {
-			// 	this.idleTimer = 0;
-			// }
+			this.idleTime += 1000 * this.milliDT;
+			if (this.idleTime >= 20000) {
+				if (this.isDead == false) {
+					this.spriteObj.animate("PC_Invisible", 1);
+					if (this.lastDir == "right") {
+						this.spriteObj2.animate("PC_IdleBored00r", 1);
+					} else if (this.lastDir == "left") {
+						this.spriteObj2.animate("PC_IdleBored00l", 1);
+					}
+				}
+			}
+			if (!this.spriteObj2.isPlaying("PC_IdleBored00r") && !this.spriteObj2.isPlaying("PC_IdleBored00l") || this.curVel.x != 0 || this.curVel.y < 0 || this.curVel.y > 20) {
+				this.spriteObj2.animate("PC_LongInvisible", 1);
+			} else {
+				this.idleTime = 0;
+			}
 
 			// ------ Update_Hitbox ------ //
 			this.hitBox_down.x = (this.x + 2) + this.curVel.x * this.milliDT;
@@ -1257,7 +1257,6 @@ Crafty.c("Spike_Ball_01", {
 		this.curVel = { x: 0, y: 0 };
 		this.resetVel = { x: 0, y: 0 };
 		this.resetPosCoords = { x: 0, y: 0};
-		this.broadphasebox = {x: 0, y: 0, w: 0, h: 0 };
 		this.collType = "float"; // Allowed: float, roll, bounce
 		this.bounceImpulse = -600;
 		this.isDead = false;
@@ -1693,7 +1692,7 @@ Crafty.c("Spike_Ball_ChainAnchor_02", {
 // ------------- Spike_Ball_HitBox_02 ------------- //
 Crafty.c("Spike_Ball_HitBox_02", {
 	init: function() {
-		this.requires("Actor, collisionDetection, Collision")
+		this.requires("Actor, Collision")
 			.attr({ w: (60 * worldScale), h: (60 * worldScale) });
 
 		this.rotationDir = "clockwise"; // clockwise, counterClockwise
@@ -1735,14 +1734,13 @@ Crafty.c("Spike_Ball_02", {
 
 		this.curRotationAngle = 0;
 		this.radiusMultiplier = 1;
-		this.chainLengh = 200;
-		this.radius = (this.chainLengh * this.radiusMultiplier * worldScale); // Should be kept to step size of Spike_Ball_Chain_Sprite_02 width
-		this.curRotPoint = { x: this.x + this.radius, y: this.y}; // Doesn't actually change, only gets used as a reference point
-		this.nextRotPoint = { x: this.x + this.radius, y: this.y};
+		this.chainLength = 200;
+		this.radius = (this.chainLength * this.radiusMultiplier * worldScale); // Should be kept to step size of Spike_Ball_Chain_Sprite_02 width
+		this.curRotPoint = { x: this.x + this.radius, y: this.y }; // Doesn't actually change, only gets used as a reference point
+		this.nextRotPoint = { x: this.x + this.radius, y: this.y };
 
 		this.chainSegArray = [];
 		this.chainDistanceSegment = { x: 0, y: 0 };
-		// this.createChain();
 
 		this.spikeBall = Crafty.e("Spike_Ball_HitBox_02");
 		this.spikeBallOrigin = Crafty.e("spr_SpikeBallOrigin_Sprite_02");
@@ -1790,7 +1788,7 @@ Crafty.c("Spike_Ball_02", {
 	},
 
 	updateChain: function() {
-		// Divide distance between origin and curRotPoint by length of chain
+		// Divide distance between origin and nextRotPoint by length of chain
 		this.chainDistanceSegment.x = (this.x - this.nextRotPoint.x) / this.chainSegArray.length;
 		this.chainDistanceSegment.y = (this.y - this.nextRotPoint.y) / this.chainSegArray.length;
 
@@ -1828,7 +1826,7 @@ Crafty.c("Spike_Ball_02", {
 		} else {
 			this.radiusMultiplier = 1;
 		}
-		this.radius = (this.chainLengh * this.radiusMultiplier * worldScale);
+		this.radius = (this.chainLength * this.radiusMultiplier * worldScale);
 		this.curRotPoint = { x: this.x + this.radius, y: this.y}; // Doesn't actually change, only gets used as a reference point
 		this.nextRotPoint = { x: this.x + this.radius, y: this.y};
 		this.createChain();
@@ -1905,12 +1903,14 @@ Crafty.c("ProjectileShooter", {
 		this.reel("shoot_00r", 1000, 0, 0, 13);
 		this.shootVel = 200;
 		this.direction = "left"; // Recognized: "left", "right", "up", "down"
+		this.projectileType = "default"; // Recognized: "default", "chase"
 		this.shootDelay = 5000; // In ms, time between shots
+		this.lifeTime = 10000; // In ms, how long the projectile can exist
 
 		this.delay(function() { // Start animation
 			this.animate("shoot_00r", 1);
 			this.delay(function() { // Instance projectile at end of animation
-				this.shootProjectile();
+				this.shootProjectile(this.projectileType);
 			}, 700, 0);
 		}, this.shootDelay, -1); // Loop infinitely
 	},
@@ -1937,23 +1937,53 @@ Crafty.c("ProjectileShooter", {
 		} else {
 			this.shootDelay = 5000; // Default
 		}
+		if (propertiesIn.lifeTime) {
+			this.lifeTime = propertiesIn.lifeTime;
+		} else {
+			this.lifeTime = 10000; // Default
+		}
+		if (propertiesIn.projectileType) {
+			this.projectileType = propertiesIn.projectileType;
+		} else {
+			this.projectileType = "default"; // Default
+		}
 	},
 
-	shootProjectile: function() {
-		entitiesList[entitiesListIndex] = Crafty.e("Projectile")
+	shootProjectile: function(projectileTypeIn) {
+		if (projectileTypeIn == "default") {
+			entitiesList[entitiesListIndex] = Crafty.e("Projectile")
 			.attr({ x: (this.x + this.w/4), y: (this.y + this.h/4) });
-		if (this.direction == "left") {
-			entitiesList[entitiesListIndex].curVel = { x: -this.shootVel, y: 0};
-			entitiesList[entitiesListIndex].rotation = 0;
-		} else if (this.direction == "right") {
-			entitiesList[entitiesListIndex].curVel = { x: this.shootVel, y: 0 };
-			entitiesList[entitiesListIndex].rotation = 180;
-		} else if (this.direction == "up") {
-			entitiesList[entitiesListIndex].curVel = { x: 0, y: -this.shootVel };
-			entitiesList[entitiesListIndex].rotation = 90;
-		} else if (this.direction == "down") {
-			entitiesList[entitiesListIndex].curVel = { x: 0, y: this.shootVel };
-			entitiesList[entitiesListIndex].rotation = 270;
+			entitiesList[entitiesListIndex].lifeTime = this.lifeTime;
+			if (this.direction == "left") {
+				entitiesList[entitiesListIndex].curVel = { x: -this.shootVel, y: 0};
+				entitiesList[entitiesListIndex].rotation = 0;
+			} else if (this.direction == "right") {
+				entitiesList[entitiesListIndex].curVel = { x: this.shootVel, y: 0 };
+				entitiesList[entitiesListIndex].rotation = 180;
+			} else if (this.direction == "up") {
+				entitiesList[entitiesListIndex].curVel = { x: 0, y: -this.shootVel };
+				entitiesList[entitiesListIndex].rotation = 90;
+			} else if (this.direction == "down") {
+				entitiesList[entitiesListIndex].curVel = { x: 0, y: this.shootVel };
+				entitiesList[entitiesListIndex].rotation = 270;
+			}
+		} else if (projectileTypeIn == "chase") {
+			entitiesList[entitiesListIndex] = Crafty.e("chaserProjectile_01")
+			.attr({ x: (this.x + this.w/4), y: (this.y + this.h/4) });
+			entitiesList[entitiesListIndex].lifeTime = this.lifeTime;
+			if (this.direction == "left") {
+				entitiesList[entitiesListIndex].curVel = { x: -this.shootVel, y: 0};
+				entitiesList[entitiesListIndex].rotation = 180;
+			} else if (this.direction == "right") {
+				entitiesList[entitiesListIndex].curVel = { x: this.shootVel, y: 0 };
+				entitiesList[entitiesListIndex].rotation = 0;
+			} else if (this.direction == "up") {
+				entitiesList[entitiesListIndex].curVel = { x: 0, y: -this.shootVel };
+				entitiesList[entitiesListIndex].rotation = 270;
+			} else if (this.direction == "down") {
+				entitiesList[entitiesListIndex].curVel = { x: 0, y: this.shootVel };
+				entitiesList[entitiesListIndex].rotation = 90;
+			}
 		}
 		entitiesListIndex++;
 	},
@@ -1965,6 +1995,10 @@ Crafty.c("Projectile", {
 		this.requires("Actor, Entity, Collision, Delay, collisionDetection, spr_projectile_01")
 			.attr({ w: (50 * worldScale), h: (50 * worldScale) });
 		this.origin("center");
+		this.lifeTime = 10000;
+		this.curVel = { x: 0, y: 0 };
+		this.isDead = false;
+
 		this.onHit("PC", function(collData) {
 			var curObj = collData[0].obj;
 			curObj.die();
@@ -1972,23 +2006,32 @@ Crafty.c("Projectile", {
 		}, function() {
 			// 
 		});
-		this.lifeTime = 0;
-		this.curVel = { x: 0, y: 0 };
-		this.broadphasebox = {x: 0, y: 0, w: 0, h: 0 };
-		this.isDead = false;
 
 		this.deathEmitter = Crafty.e("Particle_Emitter");
 		this.deathEmitter.movParent = this;
-		// this.deathEmitter.posOffset = {x: 0, y: this.h/2};
+		this.deathEmitter.posOffset = { x: this.w, y: this.h/2 };
+		this.deathEmitterSettings = { emitW: 40, emitH: 60, emitVel: { xMin: -80, xMax: -10, yMin: 60, yMax: 80 }, emitRandNegY: true, gravityType: "decelerate", emitExpire: true, emitLifeTime: 1000, sprite: "spr_glowRed_01", fadeOutTime: 1000 };
 
 		this.tailEmitter = Crafty.e("Particle_Emitter");
 		this.tailEmitter.movParent = this;
-		this.tailEmitter.posOffset = {x: this.w, y: this.h/2};
+		this.tailEmitter.posOffset = {x: 0, y: this.h/2};
+		this.tailEmitterSettings = { emitW: 30, emitH: 30, emitVel: { xMin: -20, xMax: -10, yMin: 10, yMax: 20 }, emitRandNegY: true, gravityType: "decelerate", emitExpire: true, emitLifeTime: 500, sprite: "spr_glowRed_01", fadeOutTime: 500 };
+		this.tailEmitterWaitTime = 0;
 
 		this.bind("EnterFrame", function(frameData) {
 			this.milliDT = (frameData.dt/1000);
 
-			this.deathEmitter.posOffset = { x: this.w, y: this.h/2 };
+			this.tailEmitterWaitTime += 1000 * this.milliDT;
+			if (this.tailEmitterWaitTime >= 60) {
+				this.tailEmitter.emitParticles( this.tailEmitterSettings, 1, 1);
+				this.tailEmitterWaitTime = 0;
+			}
+
+			// Update and check lifeTime
+			this.lifeTime -= 1000 * this.milliDT;
+			if (this.lifeTime <= 0) {
+				this.die();
+			}
 
 			// Apply velocities
 			this.x += (this.curVel.x * worldScale) * this.milliDT;
@@ -1997,18 +2040,283 @@ Crafty.c("Projectile", {
 	},
 
 	respondToCollision: function(obj, objDirType) {
-		this.die();
+		if (obj.__c.SolidBlock_backGround || obj.__c.SolidBlock_ramp || obj.__c.ClipBlock_Hazard || obj.__c.ClipBlock) {
+			this.die();
+		}
 	},
 
 	die: function() {
 		if (this.isDead == false) {
 			this.isDead = true;
-			this.deathEmitterSettings = { emitW: (40 * worldScale), emitH: (60 * worldScale), emitVel: { xMin: -80, xMax: -10, yMin: 60, yMax: 80 }, emitRandNegY: true, gravityType: "decelerate", emitExpire: true, emitLifeTime: 1000, sprite: "spr_glowRed_01", fadeOutTime: 1000 };
 			this.deathEmitter.emitParticles( this.deathEmitterSettings, 1, 6);
 
 			this.delay(function() {
+				this.deathEmitter.destroy();
+				this.tailEmitter.destroy();
 				this.destroy();
 			}, 100, 0);
+		}
+	},
+});
+
+// ------------- chaserProjectileSprite_01 ------------- //
+Crafty.c("chaserProjectileSprite_01", {
+	init: function() {
+		this.movParent = null;
+		this.offset = { x: 0, y: 0 };
+		this.rotationSpeed = 90;
+
+		this.requires("Actor, SprLocOffset, spr_projectile_01")
+			.attr({ w: (50 * worldScale), h: (50 * worldScale) });
+
+		this.bind("EnterFrame", function(frameData) {
+			// ------ Update_This ------ //
+			if (this.movParent != null) {
+				this.x = this.movParent.x - this.offset.x;
+				this.y = this.movParent.y - this.offset.y;
+			}
+		});
+	},
+});
+
+// ------------- chaserProjectile_01 ------------- //
+Crafty.c("chaserProjectile_01", {
+	init: function() {
+		this.requires("Actor, HelperMaths, Entity, Collision, Delay, collisionDetection")
+			.attr({ w: (50 * worldScale), h: (50 * worldScale) });
+
+		this.origin("center");
+
+		this.spriteObj = Crafty.e("chaserProjectileSprite_01");
+		this.spriteObj.movParent = this;
+		this.spriteObj.origin("center");
+
+		this.onHit("PC", function(collData) {
+			var curObj = collData[0].obj;
+			curObj.die();
+			this.die();
+		}, function() {
+			// 
+		});
+
+		this.targetAngle = 0;
+		this.rotSpeed = 150;
+		this.angleDif = 0; // Is the difference between rotation and targetAngle
+		this.angleInvDif = 0; // Is 360 - angleDif, basically the inverted distance from rotation to targetAngle
+		this.radius = 200; // Is effectively the movement speed
+		this.curRotPoint = { x: 0, y: 0 }; // Doesn't actually change, only gets used as a reference point
+		this.nextRotPoint = { x: 0, y: 0 };
+
+		this.curVel = { x: 0, y: 0 };
+		this.lifeTime = 10000; // After time is up, projectile dies
+		this.initialTime = 0; // After certain amount of time, chasing behaviour becomes active
+		this.isDead = false;
+
+		this.deathEmitter = Crafty.e("Particle_Emitter");
+		this.deathEmitter.movParent = this;
+		this.deathEmitterSettings = { emitW: 40, emitH: 60, emitVel: { xMin: -80, xMax: -10, yMin: 60, yMax: 80 }, emitRandNegY: true, gravityType: "decelerate", emitExpire: true, emitLifeTime: 1000, sprite: "spr_glowRed_01", fadeOutTime: 1000 };
+
+		this.tailEmitter = Crafty.e("Particle_Emitter");
+		this.tailEmitter.movParent = this;
+		this.tailEmitterSettings = { emitW: 30, emitH: 30, emitVel: { xMin: -20, xMax: -10, yMin: 10, yMax: 20 }, emitRandNegY: true, gravityType: "decelerate", emitExpire: true, emitLifeTime: 500, sprite: "spr_glowRed_01", fadeOutTime: 500 };
+		this.tailEmitterWaitTime = 0;
+
+		this.bind("EnterFrame", function(frameData) {
+			this.milliDT = (frameData.dt/1000);
+
+			this.initialTime += 1000 * this.milliDT;
+
+			this.targetAngle = this.getAtan2DegAngle({ x: this.x + this.w/2, y: this.y + this.h/2 }, { x: this.findTarget().x + this.findTarget().w/2, y: this.findTarget().y + this.findTarget().h/2 });
+			// Prevent targetAngle from exiting the range of 0 to 360
+			if (this.targetAngle < 0) {
+				this.targetAngle += 360;
+			}
+			// Prevent this.rotation from exiting the range of 0 to 360
+			if (this.rotation > 360) {
+				this.rotation -= 360;
+			} else if (this.rotation < 0) {
+				this.rotation += 360;
+			}
+			if (this.initialTime >= 500) {
+				// Check and apply rotation
+				if (this.targetAngle > this.rotation && this.targetAngle - this.rotation > this.rotSpeed * this.milliDT) { // Check if rotation should be positive under normal circumstances
+					this.angleDif = this.targetAngle - this.rotation;
+					this.angleInvDif = 360 - this.angleDif;
+					/* Check for smaller angle difference, basically a check to see if rotation would leave 0 to 360 range
+					* I.e. if rotation is 11 and targetAngle is 350, then the smaller angle to rotate by would be the angleInvDif,
+					* which would be 21, whereas the angleDif would be 339 */
+					if (this.angleInvDif > this.angleDif) { // Check if normal circumstances apply, i.e. rotation should be positive
+						this.rotation += this.rotSpeed * this.milliDT;
+					} else if (this.angleInvDif < this.angleDif) { // Else go in opposite direction than under normal circumstances
+						this.rotation -= this.rotSpeed * this.milliDT;
+					}
+				} else if (this.targetAngle < this.rotation && this.rotation - this.targetAngle > this.rotSpeed * this.milliDT) { // Check if rotation should be negative under normal circumstances
+					this.angleDif = this.rotation - this.targetAngle;
+					this.angleInvDif = 360 - this.angleDif;
+					/* Check for smaller angle difference, basically a check to see if rotation would leave 0 to 360 range
+					* I.e. if rotation is 332 and targetAngle is 13, then the smaller angle to rotate by would be the angleInvDif,
+					* which would be 41, whereas the angleDif would be 319 */
+					if (this.angleInvDif > this.angleDif) {
+						this.rotation -= this.rotSpeed * this.milliDT;
+					} else if (this.angleInvDif < this.angleDif) {
+						this.rotation += this.rotSpeed * this.milliDT;
+					}
+				}
+			}
+
+			// Update and check lifeTime
+			this.lifeTime -= 1000 * this.milliDT;
+			if (this.lifeTime <= 0) {
+				this.die();
+			}
+
+			// Update rotPoints
+			this.curRotPoint = { x: this.x + this.w/2 + this.radius, y: this.y + this.h/2 };
+			this.nextRotPoint = this.getPointOnCirlce({ x: this.x + this.w/2, y: this.y + this.h/2 }, this.curRotPoint, (this.rotation * Math.PI/180));
+
+			// Update curVel
+			this.curVel.x = this.nextRotPoint.x - (this.x + this.w/2);
+			this.curVel.y = this.nextRotPoint.y - (this.y + this.h/2);
+
+			// Apply velocity
+			this.x += this.curVel.x * this.milliDT;
+			this.y += this.curVel.y * this.milliDT;
+
+			// Update this.spriteObj
+			this.spriteObj.rotation = this.rotation - 180;
+
+			// Update emitters
+			this.tailEmitterSettings.emitVel = { xMin: -this.curVel.x/10, xMax: -this.curVel.x/10 + 40, yMin: -this.curVel.y/10, yMax: -this.curVel.y/10 + 40 };
+			this.tailEmitter.posOffset = { x: this.w/2 + -this.curVel.x/10, y: this.h/2 + -this.curVel.y/10 };
+			this.tailEmitterWaitTime += 1000 * this.milliDT;
+			if (this.tailEmitterWaitTime >= 60) {
+				this.tailEmitter.emitParticles( this.tailEmitterSettings, 1, 1);
+				this.tailEmitterWaitTime = 0;
+			}
+			this.deathEmitterSettings.emitVel = { xMin: -200, xMax: 200, yMin: -200, yMax: 200 };
+			this.deathEmitter.posOffset = { x: this.w/2 + this.curVel.x/10, y: this.h/2 + this.curVel.y/10 };
+		});
+	},
+
+	findTarget: function() {
+		return Crafty("PC").get(-1);
+	},
+
+	respondToCollision: function(obj, objDirType) {
+		if (obj.__c.SolidBlock_backGround || obj.__c.SolidBlock_ramp || obj.__c.ClipBlock_Hazard || obj.__c.ClipBlock) {
+			this.die();
+		}
+	},
+
+	die: function() {
+		if (this.isDead == false) {
+			this.isDead = true;
+			this.deathEmitter.emitParticles( this.deathEmitterSettings, 1, 6);
+
+			this.delay(function() {
+				this.spriteObj.destroy();
+				this.deathEmitter.destroy();
+				this.tailEmitter.destroy();
+				this.destroy();
+			}, 100, 0);
+		}
+	},
+});
+
+// ------------- Crusher_Sprite_01 ------------- //
+Crafty.c("Crusher_Sprite_01", {
+	init: function() {
+		this.movParent = null;
+		this.offset = { x: 0, y: 0 };
+		this.hitBoxOffset = (10 * worldScale);
+
+		this.requires("Actor, SpriteAnimation, SprLocOffset, spr_crusher_01")
+			.attr({ w: (180 * worldScale), h: (180 * worldScale), z: 5000 });
+
+		// ---- Instance_HitBox ---- //
+		this.hitBox = Crafty.e("Actor, Color, Collision");
+		this.hitBox.attr({ x: this.x, y: this.y + this.h - this.hitBoxOffset, w: this.w, h: this.hitBoxOffset })
+		this.hitBox.color("red")
+		this.hitBox.isActive = false;
+		this.hitBox.onHit("PC", function(collData) {
+				if (this.isActive == true) {
+					for (var n = collData.length-1; n > -1; --n) {
+						var curObj = collData[n].obj;
+
+						curObj.die();
+						this.color("blue");
+						collidedD = true;
+					}
+				}
+			}, function() {
+				this.color("red");
+				collidedD = false;
+			});
+
+		this.bind("EnterFrame", function(frameData) {
+			// ------ Update_This ------ //
+			if (this.movParent != null) {
+				this.x = this.movParent.x - this.offset.x;
+				this.y = this.movParent.y - this.offset.y;
+			}
+		});
+	},
+});
+
+// ------------- Crusher_01 ------------- //
+Crafty.c("Crusher_01", {
+	init: function() {
+		this.movParent = null;
+		this.requires("Actor");
+
+		this.spriteObj = Crafty.e("Crusher_Sprite_01");
+		this.spriteObj.movParent = this;
+		this.state = 0; // 0 = fully reset, 1 = warning, starting to move, 2 = crushing, moving fully
+		this.stateTime = 0;
+		this.direction = "down"; // down, up, right, left
+
+		this.bind("EnterFrame", function(frameData) {
+			this.milliDT = (frameData.dt/1000);
+
+			this.stateTime += 1000 * this.milliDT;
+			if (this.stateTime >= 3000) { // Go to stage 1
+				// this.spriteObj
+				if (this.stateTime >= 4000) { // Go to stage 2
+					// 
+					if (this.stateTime >= 5500) { // Go to stage 0
+						// 
+						this.stateTime = 0;
+					}
+				}
+			}
+		});
+	},
+
+	setProperties: function(propertiesIn) {
+		this.direction = propertiesIn.direction;
+		this.spriteObj.origin("center");
+		if (propertiesIn.direction == "left") {
+			this.spriteObj.rotation = 90;
+			// this.spriteObj.hitBox.attr({ x: this.spriteObj.x, y: this.spriteObj.y, w: this.hitBoxOffset, h: this.spriteObj.h });
+		} else if (propertiesIn.direction == "right") {
+			this.spriteObj.rotation = 270;
+			// this.spriteObj.hitBox.attr({ x: this.spriteObj.x + this.spriteObj.w - this.hitBoxOffset, y: this.spriteObj.y, w: this.hitBoxOffset, h: this.spriteObj.h });
+		} else if (propertiesIn.direction == "up") {
+			this.spriteObj.rotation = 180;
+			// this.spriteObj.hitBox.attr({ x: this.spriteObj.x, y: this.spriteObj.y, w: this.hitBoxOffset, h: this.hitBoxOffset });
+		} else if (propertiesIn.direction == "down") {
+			this.spriteObj.rotation = 0;
+			// this.spriteObj.hitBox.attr({ x: this.spriteObj.x, y: this.spriteObj.y + this.spriteObj.h - this.hitBoxOffset, w: this.w, h: this.hitBoxOffset });
+		}
+		if (propertiesIn.shootVel) {
+			this.shootVel = propertiesIn.shootVel;
+		} else {
+			this.shootVel = 200; // Default
+		}
+		if (propertiesIn.shootDelay) {
+			this.shootDelay = propertiesIn.shootDelay;
+		} else {
+			this.shootDelay = 5000; // Default
 		}
 	},
 });
