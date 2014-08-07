@@ -564,15 +564,6 @@ Crafty.c("ClipBlock_Hazard", {
 	},
 });
 
-// ------------- dotThing ------------- //
-Crafty.c("dotThing", {
-	init: function() {
-		this.requires("Actor, Color")
-			.attr({ w: 4, h: 4 })
-			.color("red");
-	},
-});
-
 // ------------- Hazard_Block ------------- //
 Crafty.c("Hazard_Block", {
 	init: function() {
@@ -588,6 +579,15 @@ Crafty.c("Hazard_Block", {
 		}, function() {
 			// 
 		});
+	},
+});
+
+// ------------- dotThing ------------- //
+Crafty.c("dotThing", {
+	init: function() {
+		this.requires("Actor, Color")
+			.attr({ w: 4, h: 4 })
+			.color("red");
 	},
 });
 
@@ -666,7 +666,7 @@ Crafty.c("PC", {
 
 		var collidedD = false;
 
-		this.requires("Actor, collisionDetection, Keyboard, Delay, Entity")
+		this.requires("Actor, collisionDetection, Keyboard, Delay, Resettable")
 			.attr({w: (35 * worldScale), h: (85 * worldScale)});
 
 		this.spriteObj = Crafty.e("PC_Sprite");
@@ -717,7 +717,9 @@ Crafty.c("PC", {
 				if (e.key == Crafty.keys.SPACE && collidedD == true)  {
 					this.jump(this.jumpImpulse);
 				} else if (e.key == Crafty.keys.Q) {
-					this.resetPos();
+					Crafty("Resettable").each(function(i) {
+						this.resetEnt();
+					});
 				} else if (e.key == Crafty.keys.S) {
 					this.canJump = false;
 				}
@@ -867,20 +869,23 @@ Crafty.c("PC", {
 				this.deathEmitterSettings = { emitW: 40, emitH: 60, emitVel: { xMin: 0, xMax: 120, yMin: 120, yMax: 150 }, emitRandom: true, emitRandNegX: true, gravityType: "slowFall", emitCollSetting: "noCollide", emitExpire: true, emitLifeTime: 5000, sprite: "spr_PC_Parachute", fadeOutTime: 2000 };
 				this.deathEmitter.emitParticles( this.deathEmitterSettings, 1, 12);
 			}, 700, 0);
-			// Delay resetPos
+			// Delay resetEnt
 			this.delay(function() {
-				this.resetPos();
-				this.isDead = false;
-				this.canJump = true;
+				Crafty("Resettable").each(function(i) {
+					this.resetEnt();
+				});
 			}, 3000, 0);
 		}
 	},
 
-	resetPos: function() {
+	resetEnt: function() {
 		this.x = this.resetPosCoords.x;
 		this.y = this.resetPosCoords.y;
 		this.curVel.x = 0;
 		this.curVel.y = 0;
+
+		this.isDead = false;
+		this.canJump = true;
 	},
 
 	setResetPos: function(xIn, yIn) {
@@ -909,6 +914,12 @@ Crafty.c("PC", {
 			} else if (objDirType == "isFloor" && obj.__c.Solid) {
 				if (this.curVel.y > (500 * worldScale)) {
 					this.feetDustEmitter.emitParticles( this.feetDustEmitterSettings, 1, 5);
+				}
+				if (this.isDown("V")) {
+					console.log(obj);
+				}
+				if (obj.curVel) {
+					this.x += (obj.curVel.x * worldScale) * this.milliDT;
 				}
 				this.curVel.y = 0;
 				this.y = objT - this.h;
@@ -1252,7 +1263,7 @@ Crafty.c("Spike_Ball_Sprite_01", {
 // ------------- Spike_Ball_01 ------------- //
 Crafty.c("Spike_Ball_01", {
 	init: function() {
-		this.requires("Actor, Delay, collisionDetection, Collision")
+		this.requires("Actor, Delay, collisionDetection, Collision, Resettable")
 			.attr({ w: (70 * worldScale), h: (70 * worldScale) });
 		this.curVel = { x: 0, y: 0 };
 		this.resetVel = { x: 0, y: 0 };
@@ -1278,12 +1289,6 @@ Crafty.c("Spike_Ball_01", {
 			curObj.die();
 		}, function() {
 			// 
-		});
-
-		this.bind("KeyDown", function(e) {
-			if (e.key == Crafty.keys.Q) {
-				this.resetPos();
-			}
 		});
 
 		this.bind("EnterFrame", function(frameData) {
@@ -1334,7 +1339,7 @@ Crafty.c("Spike_Ball_01", {
 		}
 	},
 
-	resetPos: function() {
+	resetEnt: function() {
 		this.x = this.resetPosCoords.x;
 		this.y = this.resetPosCoords.y;
 		this.curVel.x = this.resetVel.x;
@@ -1555,20 +1560,25 @@ Crafty.c("Spike_Ball_01", {
 // ------------- Spike_Ball_Launcher_01 ------------- //
 Crafty.c("Spike_Ball_Launcher_01", {
 	init: function() {
-		this.requires("Actor, Delay, Entity, SpriteAnimation, spr_spikeBallLauncher_01")
+		this.requires("Actor, Delay, Resettable, SpriteAnimation, spr_spikeBallLauncher_01")
 			.attr({ w: (180 * worldScale), h: (150 * worldScale), z: 8000 });
 		this.direction = "right"; // Recognized: "left", "right"
 		this.shootDelay = 5000; // In ms, time between shots
+		this.shootDelayTime = 0;
 		this.projectileCollType = "roll"; // float, roll, bounce
 		this.shootVel = 4;
 		this.postImpactVel = { x: 2, y: 0 };
 
-		this.delay(function() { // Start animation
-			// TODO animation?
-			this.delay(function() { // Instance projectile at end of animation
+		this.bind("EnterFrame", function(frameData) {
+			this.milliDT = (frameData.dt/1000);
+
+			this.shootDelayTime += 1000 * this.milliDT;
+			console.log(this.shootDelay);
+			if (this.shootDelayTime >= this.shootDelay) {
 				this.shootProjectile();
-			}, 700, 0);
-		}, this.shootDelay, -1); // Loop infinitely
+				this.shootDelayTime = 0;
+			}
+		});
 	},
 
 	setProperties: function(propertiesIn) {
@@ -1585,7 +1595,7 @@ Crafty.c("Spike_Ball_Launcher_01", {
 			this.shootVel = 4; // Default
 		}
 		if (propertiesIn.collType) {
-			this.shootDelay = propertiesIn.collType;
+			this.collType = propertiesIn.collType;
 		} else {
 			this.collType = "roll"; // Default
 		}
@@ -1607,6 +1617,10 @@ Crafty.c("Spike_Ball_Launcher_01", {
 			entitiesList[entitiesListIndex].postImpactVel = this.postImpactVel;
 		}
 		entitiesListIndex++;
+	},
+
+	resetEnt: function() {
+		this.shootDelayTime = 0;
 	},
 });
 
@@ -1726,7 +1740,7 @@ Crafty.c("Spike_Ball_HitBox_02", {
 // This entity is what handles all the logic; Instance this object, it will automatically assemble all the necessary components
 Crafty.c("Spike_Ball_02", {
 	init: function() {
-		this.requires("Actor, HelperMaths")
+		this.requires("Actor, HelperMaths, Resettable")
 			.attr({ w: 2, h: 2 });
 		this.resetPosCoords = { x: 0, y: 0};
 		this.rotationDir = "clockwise"; // clockwise, counterClockwise
@@ -1744,12 +1758,6 @@ Crafty.c("Spike_Ball_02", {
 
 		this.spikeBall = Crafty.e("Spike_Ball_HitBox_02");
 		this.spikeBallOrigin = Crafty.e("spr_SpikeBallOrigin_Sprite_02");
-
-		this.bind("KeyDown", function(e) {
-			if (e.key == Crafty.keys.Q) {
-				this.resetPos();
-			}
-		});
 
 		this.bind("EnterFrame", function(frameData) {
 			this.milliDT = (frameData.dt/1000);
@@ -1832,7 +1840,7 @@ Crafty.c("Spike_Ball_02", {
 		this.createChain();
 	},
 
-	resetPos: function() {
+	resetEnt: function() {
 		this.x = this.resetPosCoords.x;
 		this.y = this.resetPosCoords.y;
 		this.curRotPoint.x = this.x + this.radius;
@@ -1898,21 +1906,30 @@ Crafty.c("JumpPad", {
 // ------------- ProjectileShooter ------------- //
 Crafty.c("ProjectileShooter", {
 	init: function() {
-		this.requires("Actor, Delay, Entity, SpriteAnimation, spr_projectileShooter_01")
+		this.requires("Actor, Delay, Resettable, SpriteAnimation, spr_projectileShooter_01")
 			.attr({ w: (90 * worldScale), h: (90 * worldScale), z: 8000 });
 		this.reel("shoot_00r", 1000, 0, 0, 13);
 		this.shootVel = 200;
 		this.direction = "left"; // Recognized: "left", "right", "up", "down"
 		this.projectileType = "default"; // Recognized: "default", "chase"
 		this.shootDelay = 5000; // In ms, time between shots
+		this.shootDelayTime = 0;
 		this.lifeTime = 10000; // In ms, how long the projectile can exist
 
-		this.delay(function() { // Start animation
-			this.animate("shoot_00r", 1);
-			this.delay(function() { // Instance projectile at end of animation
+		this.bind("EnterFrame", function(frameData) {
+			this.milliDT = (frameData.dt/1000);
+
+			this.shootDelayTime += 1000 * this.milliDT;
+			if (this.shootDelayTime >= this.shootDelay - 700) {
+				if (!this.isPlaying("shoot_00r")) {
+					this.animate("shoot_00r", 1);
+				}
+			}
+			if (this.shootDelayTime >= this.shootDelay) {
 				this.shootProjectile(this.projectileType);
-			}, 700, 0);
-		}, this.shootDelay, -1); // Loop infinitely
+				this.shootDelayTime = 0;
+			}
+		});
 	},
 
 	setProperties: function(propertiesIn) {
@@ -1987,12 +2004,16 @@ Crafty.c("ProjectileShooter", {
 		}
 		entitiesListIndex++;
 	},
+
+	resetEnt: function() {
+		this.shootDelayTime = 0;
+	},
 });
 
 // ------------- Projectile ------------- //
 Crafty.c("Projectile", {
 	init: function() {
-		this.requires("Actor, Entity, Collision, Delay, collisionDetection, spr_projectile_01")
+		this.requires("Actor, Resettable, Collision, Delay, collisionDetection, spr_projectile_01")
 			.attr({ w: (50 * worldScale), h: (50 * worldScale) });
 		this.origin("center");
 		this.lifeTime = 10000;
@@ -2057,6 +2078,10 @@ Crafty.c("Projectile", {
 			}, 100, 0);
 		}
 	},
+
+	resetEnt: function() {
+		this.die();
+	},
 });
 
 // ------------- chaserProjectileSprite_01 ------------- //
@@ -2082,7 +2107,7 @@ Crafty.c("chaserProjectileSprite_01", {
 // ------------- chaserProjectile_01 ------------- //
 Crafty.c("chaserProjectile_01", {
 	init: function() {
-		this.requires("Actor, HelperMaths, Entity, Collision, Delay, collisionDetection")
+		this.requires("Actor, HelperMaths, Resettable, Collision, Delay, collisionDetection")
 			.attr({ w: (50 * worldScale), h: (50 * worldScale) });
 
 		this.origin("center");
@@ -2221,6 +2246,10 @@ Crafty.c("chaserProjectile_01", {
 			}, 100, 0);
 		}
 	},
+
+	resetEnt: function() {
+		this.die();
+	},
 });
 
 // ------------- Crusher_Sprite_01 ------------- //
@@ -2228,30 +2257,34 @@ Crafty.c("Crusher_Sprite_01", {
 	init: function() {
 		this.movParent = null;
 		this.offset = { x: 0, y: 0 };
-		this.hitBoxOffset = (10 * worldScale);
+		this.hitBoxOffset = { x: 0, y: 0 };
+		this.collisionBoxOffset = { x: 0, y: 0 };
+		this.hitBoxWH = (10 * worldScale);
 
 		this.requires("Actor, SpriteAnimation, SprLocOffset, spr_crusher_01")
 			.attr({ w: (180 * worldScale), h: (180 * worldScale), z: 5000 });
 
 		// ---- Instance_HitBox ---- //
 		this.hitBox = Crafty.e("Actor, Color, Collision");
-		this.hitBox.attr({ x: this.x, y: this.y + this.h - this.hitBoxOffset, w: this.w, h: this.hitBoxOffset })
+		this.hitBox.attr({ z: 6000 })
 		this.hitBox.color("red")
-		this.hitBox.isActive = false;
+		this.hitBox.isActive = true;
 		this.hitBox.onHit("PC", function(collData) {
-				if (this.isActive == true) {
-					for (var n = collData.length-1; n > -1; --n) {
-						var curObj = collData[n].obj;
+			if (this.isActive == true) {
+				for (var n = collData.length-1; n > -1; --n) {
+					var curObj = collData[n].obj;
 
-						curObj.die();
-						this.color("blue");
-						collidedD = true;
-					}
+					curObj.die();
+					this.color("blue");
 				}
-			}, function() {
-				this.color("red");
-				collidedD = false;
-			});
+			}
+		}, function() {
+			this.color("red");
+		});
+		// ---- Instance_CollisionBox ---- //
+		clipList[clipListIndex] = Crafty.e("ClipBlock");
+		this.collisionBox = clipList[clipListIndex];
+		clipListIndex++;
 
 		this.bind("EnterFrame", function(frameData) {
 			// ------ Update_This ------ //
@@ -2259,6 +2292,14 @@ Crafty.c("Crusher_Sprite_01", {
 				this.x = this.movParent.x - this.offset.x;
 				this.y = this.movParent.y - this.offset.y;
 			}
+
+			// ---- Update_HitBox ---- //
+			this.hitBox.x = this.x + this.hitBoxOffset.x;
+			this.hitBox.y = this.y + this.hitBoxOffset.y;
+
+			// ---- Update_CollisionBox ---- //
+			this.collisionBox.x = this.x + this.collisionBoxOffset.x;
+			this.collisionBox.y = this.y + this.collisionBoxOffset.y;
 		});
 	},
 });
@@ -2267,46 +2308,139 @@ Crafty.c("Crusher_Sprite_01", {
 Crafty.c("Crusher_01", {
 	init: function() {
 		this.movParent = null;
-		this.requires("Actor");
+		this.requires("Actor, Resettable");
 
 		this.spriteObj = Crafty.e("Crusher_Sprite_01");
 		this.spriteObj.movParent = this;
 		this.state = 0; // 0 = fully reset, 1 = warning, starting to move, 2 = crushing, moving fully
 		this.stateTime = 0;
 		this.direction = "down"; // down, up, right, left
+		this.curVel = { x: 0, y: 0 };
+		this.maxVel = { x: 0, y: 0 };
+		this.resetPosCoords = { x: 0, y: 0 };
 
 		this.bind("EnterFrame", function(frameData) {
 			this.milliDT = (frameData.dt/1000);
 
 			this.stateTime += 1000 * this.milliDT;
-			if (this.stateTime >= 3000) { // Go to stage 1
-				// this.spriteObj
-				if (this.stateTime >= 4000) { // Go to stage 2
-					// 
-					if (this.stateTime >= 5500) { // Go to stage 0
-						// 
-						this.stateTime = 0;
+			// Go to stage 1
+			if (this.state == 0 && this.stateTime >= 2000) {
+				if (this.direction == "down" || this.direction == "right") {
+					if (this.x < this.resetPosCoords.x + (10 * worldScale) && this.y < this.resetPosCoords.y + (10 * worldScale)) {
+						this.curVel.x = this.maxVel.x;
+						this.curVel.y = this.maxVel.y;
+					} else {
+						this.setState(1);
+					}
+				} else {
+					if (this.x > this.resetPosCoords.x - (10 * worldScale) && this.y > this.resetPosCoords.y - (10 * worldScale)) {
+						this.curVel.x = this.maxVel.x;
+						this.curVel.y = this.maxVel.y;
+					} else {
+						this.setState(1);
 					}
 				}
 			}
+			// Go to stage 2
+			if (this.state == 1 && this.stateTime >= 600) {
+				if (this.direction == "down" || this.direction == "right") {
+					if (this.x < this.resetPosCoords.x + (180 * worldScale) && this.y < this.resetPosCoords.y + (180 * worldScale)) {
+						this.curVel.x = this.maxVel.x;
+						this.curVel.y = this.maxVel.y;
+					} else {
+						this.setState(2);
+					}
+				} else {
+					if (this.x > this.resetPosCoords.x - (180 * worldScale) && this.y > this.resetPosCoords.y - (180 * worldScale)) {
+						this.curVel.x = this.maxVel.x;
+						this.curVel.y = this.maxVel.y;
+					} else {
+						this.setState(2);
+					}
+				}
+			}
+			// Go to stage 0
+			if (this.state == 2 && this.stateTime >= 1500) {
+				if (this.direction == "down" || this.direction == "right") {
+					if (this.x >= this.resetPosCoords.x && this.y >= this.resetPosCoords.y) {
+						this.curVel.x = -this.maxVel.x;
+						this.curVel.y = -this.maxVel.y;
+					} else {
+						this.setState(0);
+					}
+				} else {
+					if (this.x <= this.resetPosCoords.x && this.y <= this.resetPosCoords.y) {
+						this.curVel.x = -this.maxVel.x;
+						this.curVel.y = -this.maxVel.y;
+					} else {
+						this.setState(0);
+					}
+				}
+			}
+
+			// Apply velocities
+			this.x += (this.curVel.x * worldScale) * this.milliDT;
+			this.y += (this.curVel.y * worldScale) * this.milliDT;
+
+			// Pass velocities to collisionBox
+			// The collisionBox doesn't actually do anything with this property, it only holds it for use during other ents' collision response
+			this.spriteObj.collisionBox.curVel = { x: this.curVel.x, y: this.curVel.y };
 		});
 	},
 
+	setState: function(stateIn) {
+		this.curVel.x = 0;
+		this.curVel.y = 0;
+		this.state = stateIn;
+		this.stateTime = 0;
+	},
+
 	setProperties: function(propertiesIn) {
+		this.resetPosCoords = { x: this.x, y: this.y };
 		this.direction = propertiesIn.direction;
 		this.spriteObj.origin("center");
 		if (propertiesIn.direction == "left") {
 			this.spriteObj.rotation = 90;
-			// this.spriteObj.hitBox.attr({ x: this.spriteObj.x, y: this.spriteObj.y, w: this.hitBoxOffset, h: this.spriteObj.h });
+			this.maxVel = { x: -100, y: 0 };
+
+			this.spriteObj.hitBoxOffset.x = 0;
+			this.spriteObj.hitBoxOffset.y = this.spriteObj.hitBoxWH/2;
+			this.spriteObj.collisionBoxOffset.x = this.spriteObj.hitBoxWH;
+			this.spriteObj.hitBox.w = this.spriteObj.hitBoxWH;
+			this.spriteObj.hitBox.h = this.spriteObj.h - this.spriteObj.hitBoxWH;
+			this.spriteObj.collisionBox.w = this.spriteObj.w - this.spriteObj.hitBoxWH;
+			this.spriteObj.collisionBox.h = this.spriteObj.h;
 		} else if (propertiesIn.direction == "right") {
 			this.spriteObj.rotation = 270;
-			// this.spriteObj.hitBox.attr({ x: this.spriteObj.x + this.spriteObj.w - this.hitBoxOffset, y: this.spriteObj.y, w: this.hitBoxOffset, h: this.spriteObj.h });
+			this.maxVel = { x: 100, y: 0 };
+			
+			this.spriteObj.hitBoxOffset.x = this.spriteObj.w - this.spriteObj.hitBoxWH;
+			this.spriteObj.hitBoxOffset.y = this.spriteObj.hitBoxWH/2;
+			this.spriteObj.hitBox.w = this.spriteObj.hitBoxWH;
+			this.spriteObj.hitBox.h = this.spriteObj.h - this.spriteObj.hitBoxWH;
+			this.spriteObj.collisionBox.w = this.spriteObj.w - this.spriteObj.hitBoxWH;
+			this.spriteObj.collisionBox.h = this.spriteObj.h;
 		} else if (propertiesIn.direction == "up") {
 			this.spriteObj.rotation = 180;
-			// this.spriteObj.hitBox.attr({ x: this.spriteObj.x, y: this.spriteObj.y, w: this.hitBoxOffset, h: this.hitBoxOffset });
+			this.maxVel = { x: 0, y: -100 };
+			
+			this.spriteObj.hitBoxOffset.x = this.spriteObj.hitBoxWH/2;
+			this.spriteObj.hitBoxOffset.y = 0;
+			this.spriteObj.collisionBoxOffset.y = this.spriteObj.hitBoxWH;
+			this.spriteObj.hitBox.w = this.spriteObj.w - this.spriteObj.hitBoxWH;
+			this.spriteObj.hitBox.h = this.spriteObj.hitBoxWH;
+			this.spriteObj.collisionBox.w = this.spriteObj.w;
+			this.spriteObj.collisionBox.h = this.spriteObj.h - this.spriteObj.hitBoxWH;
 		} else if (propertiesIn.direction == "down") {
 			this.spriteObj.rotation = 0;
-			// this.spriteObj.hitBox.attr({ x: this.spriteObj.x, y: this.spriteObj.y + this.spriteObj.h - this.hitBoxOffset, w: this.w, h: this.hitBoxOffset });
+			this.maxVel = { x: 0, y: 100 };
+			
+			this.spriteObj.hitBoxOffset.x = this.spriteObj.hitBoxWH/2;
+			this.spriteObj.hitBoxOffset.y = this.spriteObj.h - this.spriteObj.hitBoxWH;
+			this.spriteObj.hitBox.w = this.spriteObj.w - this.spriteObj.hitBoxWH;
+			this.spriteObj.hitBox.h = this.spriteObj.hitBoxWH;
+			this.spriteObj.collisionBox.w = this.spriteObj.w;
+			this.spriteObj.collisionBox.h = this.spriteObj.h - this.spriteObj.hitBoxWH;
 		}
 		if (propertiesIn.shootVel) {
 			this.shootVel = propertiesIn.shootVel;
@@ -2318,5 +2452,14 @@ Crafty.c("Crusher_01", {
 		} else {
 			this.shootDelay = 5000; // Default
 		}
+	},
+
+	resetEnt: function() {
+		this.stateTime = 0;
+		this.state = 0;
+		this.x = this.resetPosCoords.x;
+		this.y = this.resetPosCoords.y;
+		this.curVel.x = 0;
+		this.curVel.y = 0;
 	},
 });

@@ -236,7 +236,25 @@ function initLevel(levelNum) {
 					entitiesListIndex++;
 					break;
 				// ------ Crusher_01 ------ //
-				case 42: // crushing down
+				case 42: // crushing left
+					entitiesList[entitiesListIndex] = Crafty.e("Crusher_01")
+						.attr({ x: tileX, y: tileY });
+					entitiesList[entitiesListIndex].setProperties({ direction: "left" });
+					entitiesListIndex++;
+					break;
+				case 43: // crushing right
+					entitiesList[entitiesListIndex] = Crafty.e("Crusher_01")
+						.attr({ x: tileX, y: tileY });
+					entitiesList[entitiesListIndex].setProperties({ direction: "right" });
+					entitiesListIndex++;
+					break;
+				case 44: // crushing up
+					entitiesList[entitiesListIndex] = Crafty.e("Crusher_01")
+						.attr({ x: tileX, y: tileY });
+					entitiesList[entitiesListIndex].setProperties({ direction: "up" });
+					entitiesListIndex++;
+					break;
+				case 45: // crushing down
 					entitiesList[entitiesListIndex] = Crafty.e("Crusher_01")
 						.attr({ x: tileX, y: tileY });
 					entitiesList[entitiesListIndex].setProperties({ direction: "down" });
