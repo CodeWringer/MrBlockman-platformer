@@ -8,14 +8,24 @@
 
 // This defines the grid size and the size of each tile
 var tileSize = {w: (90 * worldScale), h: (90 * worldScale)},
+
 	solidBlockList = [],
 	solidBlockListIndex = 0,
+
 	solidRampList = [],
 	solidRampListIndex = 0,
+
 	entitiesList = [],
 	entitiesListIndex = 0,
+
 	clipList = [],
-	clipListIndex = 0;
+	clipListIndex = 0,
+
+	pcClipList = [],
+	pcClipListIndex = 0,
+
+	hazardClipList = [],
+	hazardClipListIndex = 0;
 
 // -------------------- Init_Level -------------------- //
 function initLevel(levelNum) {
@@ -47,10 +57,8 @@ function initLevel(levelNum) {
 					break;
 				// ------ Block_Door ------ //
 				case 3:
-					entitiesList[entitiesListIndex] = Crafty.e("BlockDoor")
-						.attr({ x: tileX, y: (tileY+tileSize.h) - (180 * worldScale) });
-					entitiesList[entitiesListIndex].setProperties({  });
-					entitiesListIndex++;
+					addEntity({ x: tileX, y: (tileY+tileSize.h) - (180 * worldScale), entType: "BlockDoor", hasResetPos: true,
+						entProperties: {} });
 					break;
 				// ------ Hazard_Floor ------ //
 				case 4:
@@ -63,202 +71,126 @@ function initLevel(levelNum) {
 					break;
 				// ------ Checkpoint ------ //
 				case 6:
-					entitiesList[entitiesListIndex] = Crafty.e("Checkpoint")
-						.attr({ x: tileX, y: (tileY+tileSize.h) - (200 * worldScale) });
-						entitiesList[entitiesListIndex].setProperties({  });
-					entitiesListIndex++;
+					addEntity({ x: tileX, y: (tileY+tileSize.h) - (200 * worldScale), entType: "Checkpoint", hasResetPos: true,
+						entProperties: {} });
 					break;
 				// ------ JumpPad ------ //
 				case 8:
-					entitiesList[entitiesListIndex] = Crafty.e("JumpPad")
-						.attr({ x: tileX, y: tileY , w: tileSize.w, h: tileSize.h });
-						entitiesList[entitiesListIndex].setProperties({  });
-					entitiesListIndex++;
+					addEntity({ x: tileX, y: tileY, w: tileSize.w, h: tileSize.h, entType: "JumpPad", hasResetPos: true,
+						entProperties: {} });
 					break;
 				// ------ PlayerClip ------ //
 				case 9:
-					addPlayerClip(tileX, tileY, {  });
+					addPlayerClip(tileX, tileY, tileSize.w, tileSize.h, {  });
 					break;
 				// ------ HazardClip ------ //
 				case 10:
-					addHazardClip(tileX, tileY, {  });
+					addHazardClip(tileX, tileY, tileSize.w, tileSize.h, {  });
 					break;
 				// ------ Clip ------ //
 				case 11:
-					addClip(tileX, tileY, {  });
+					addClip(tileX, tileY, tileSize.w, tileSize.h, {  });
 					break;
 				// ------ Spike_Ball_01 ------ //
 				case 20: // float, right
-					entitiesList[entitiesListIndex] = Crafty.e("Spike_Ball_01")
-						.attr({ x: tileX + (13 * worldScale), y: tileY + (13 * worldScale) });
-					entitiesList[entitiesListIndex].resetPosCoords = { x: tileX + (13 * worldScale), y: tileY + (13 * worldScale) };
-					entitiesList[entitiesListIndex].setProperties({ collType: "float", velocity: { x: 200, y: 0 } });
-					entitiesListIndex++;
+					addEntity({ x: tileX + (13 * worldScale), y: tileY + (13 * worldScale), entType: "Spike_Ball_01", hasResetPos: true,
+						entProperties: { collType: "float", velocity: { x: 200, y: 0 } } });
 					break;
 				case 21: // float, left
-					entitiesList[entitiesListIndex] = Crafty.e("Spike_Ball_01")
-						.attr({ x: tileX + (13 * worldScale), y: tileY + (13 * worldScale) });
-					entitiesList[entitiesListIndex].resetPosCoords = { x: tileX + (13 * worldScale), y: tileY + (13 * worldScale) };
-					entitiesList[entitiesListIndex].setProperties({ collType: "float", velocity: { x: -200, y: 0 } });
-					entitiesListIndex++;
+					addEntity({ x: tileX + (13 * worldScale), y: tileY + (13 * worldScale), entType: "Spike_Ball_01", hasResetPos: true,
+						entProperties: { collType: "float", velocity: { x: -200, y: 0 } } });
 					break;
 				case 22: // roll, right
-					entitiesList[entitiesListIndex] = Crafty.e("Spike_Ball_01")
-						.attr({ x: tileX + (13 * worldScale), y: tileY + (13 * worldScale) });
-					entitiesList[entitiesListIndex].resetPosCoords = { x: tileX + (13 * worldScale), y: tileY + (13 * worldScale) };
-					entitiesList[entitiesListIndex].setProperties({ collType: "roll", velocity: { x: 200, y: 0 } });
-					entitiesListIndex++;
+					addEntity({ x: tileX + (13 * worldScale), y: tileY + (13 * worldScale), entType: "Spike_Ball_01", hasResetPos: true,
+						entProperties: { collType: "roll", velocity: { x: 200, y: 0 } } });
 					break;
 				case 23: // roll, left
-					entitiesList[entitiesListIndex] = Crafty.e("Spike_Ball_01")
-						.attr({ x: tileX + (13 * worldScale), y: tileY + (13 * worldScale) });
-					entitiesList[entitiesListIndex].resetPosCoords = { x: tileX + (13 * worldScale), y: tileY + (13 * worldScale) };
-					entitiesList[entitiesListIndex].setProperties({ collType: "roll", velocity: { x: -200, y: 0 } });
-					entitiesListIndex++;
+					addEntity({ x: tileX + (13 * worldScale), y: tileY + (13 * worldScale), entType: "Spike_Ball_01", hasResetPos: true,
+						entProperties: { collType: "roll", velocity: { x: -200, y: 0 } } });
 					break;
 				case 24: // bounce, right
-					entitiesList[entitiesListIndex] = Crafty.e("Spike_Ball_01")
-						.attr({ x: tileX + (13 * worldScale), y: tileY + (13 * worldScale) });
-					entitiesList[entitiesListIndex].resetPosCoords = { x: tileX + (13 * worldScale), y: tileY + (13 * worldScale) };
-					entitiesList[entitiesListIndex].setProperties({ collType: "bounce", velocity: { x: 200, y: 0 } });
-					entitiesListIndex++;
+					addEntity({ x: tileX + (13 * worldScale), y: tileY + (13 * worldScale), entType: "Spike_Ball_01", hasResetPos: true,
+						entProperties: { collType: "bounce", velocity: { x: 200, y: 0 } } });
 					break;
 				case 25: // bounce, left
-					entitiesList[entitiesListIndex] = Crafty.e("Spike_Ball_01")
-						.attr({ x: tileX + (13 * worldScale), y: tileY + (13 * worldScale) });
-					entitiesList[entitiesListIndex].resetPosCoords = { x: tileX + (13 * worldScale), y: tileY + (13 * worldScale) };
-					entitiesList[entitiesListIndex].setProperties({ collType: "bounce", velocity: { x: -200, y: 0 } });
-					entitiesListIndex++;
+					addEntity({ x: tileX + (13 * worldScale), y: tileY + (13 * worldScale), entType: "Spike_Ball_01", hasResetPos: true,
+						entProperties: { collType: "bounce", velocity: { x: -200, y: 0 } } });
 					break;
 				// ------ Spike_Ball_02 ------ //
 				case 26: // clockwise
+					addEntity({ x: tileX + (tileSize.w/2), y: tileY+(tileSize.h/2), entType: "Spike_Ball_02", hasResetPos: true,
+						entProperties: { rotationDir: "clockwise" } });
 					addSolidBlock(tileX, tileY);
-					entitiesList[entitiesListIndex] = Crafty.e("Spike_Ball_02")
-						.attr({ x: tileX + (tileSize.w/2), y: tileY+(tileSize.h/2) });
-					entitiesList[entitiesListIndex].resetPosCoords = { x: tileX + (tileSize.w/2), y: tileY+(tileSize.h/2) };
-					entitiesList[entitiesListIndex].setProperties({ rotationDir: "clockwise" });
-					entitiesListIndex++;
 					break;
 				case 27: // counterClockwise
+					addEntity({ x: tileX + (tileSize.w/2), y: tileY+(tileSize.h/2), entType: "Spike_Ball_02", hasResetPos: true,
+						entProperties: { rotationDir: "counterClockwise" } });
 					addSolidBlock(tileX, tileY);
-					entitiesList[entitiesListIndex] = Crafty.e("Spike_Ball_02")
-						.attr({ x: tileX + (tileSize.w/2), y: tileY+(tileSize.h/2) });
-					entitiesList[entitiesListIndex].resetPosCoords = { x: tileX + (tileSize.w/2), y: tileY+(tileSize.h/2) };
-					entitiesList[entitiesListIndex].setProperties({ rotationDir: "counterClockwise" });
-					entitiesListIndex++;
 					break;
 				case 28: // clockwise, longer chain
+					addEntity({ x: tileX + (tileSize.w/2), y: tileY+(tileSize.h/2), entType: "Spike_Ball_02", hasResetPos: true,
+						entProperties: { rotationDir: "clockwise", radiusMultiplier: 2 } });
 					addSolidBlock(tileX, tileY);
-					entitiesList[entitiesListIndex] = Crafty.e("Spike_Ball_02")
-						.attr({ x: tileX + (tileSize.w/2), y: tileY+(tileSize.h/2) });
-					entitiesList[entitiesListIndex].resetPosCoords = { x: tileX + (tileSize.w/2), y: tileY+(tileSize.h/2) };
-					entitiesList[entitiesListIndex].setProperties({ rotationDir: "clockwise", radiusMultiplier: 2 });
-					entitiesListIndex++;
 					break;
 				case 29: // counterClockwise, longer chain
+					addEntity({ x: tileX + (tileSize.w/2), y: tileY+(tileSize.h/2), entType: "Spike_Ball_02", hasResetPos: true,
+						entProperties: { rotationDir: "counterClockwise", radiusMultiplier: 2 } });
 					addSolidBlock(tileX, tileY);
-					entitiesList[entitiesListIndex] = Crafty.e("Spike_Ball_02")
-						.attr({ x: tileX + (tileSize.w/2), y: tileY+(tileSize.h/2) });
-					entitiesList[entitiesListIndex].resetPosCoords = { x: tileX + (tileSize.w/2), y: tileY+(tileSize.h/2) };
-					entitiesList[entitiesListIndex].setProperties({ rotationDir: "counterClockwise", radiusMultiplier: 2 });
-					entitiesListIndex++;
 					break;
 				// ------ ProjectileShooter ------ //
 				case 30: // left
-					entitiesList[entitiesListIndex] = Crafty.e("ProjectileShooter")
-						.attr({ x: tileX, y: tileY });
-					entitiesList[entitiesListIndex].setProperties({ direction: "left" });
-					addPlayerClip(tileX, tileY, { isWallR: false });
-					entitiesListIndex++;
+					addEntity({ x: tileX, y: tileY, entType: "ProjectileShooter", entProperties: { direction: "left" }, 
+						entClip: { clipType: "pcClip", solidTypes: { isWallR: false } } });
 					break;
 				case 31: // right
-					entitiesList[entitiesListIndex] = Crafty.e("ProjectileShooter")
-						.attr({ x: tileX, y: tileY });
-					entitiesList[entitiesListIndex].setProperties({ direction: "right" });
-					addPlayerClip(tileX, tileY, { isWallL: false });
-					entitiesListIndex++;
+					addEntity({ x: tileX, y: tileY, entType: "ProjectileShooter", entProperties: { direction: "right" }, 
+						entClip: { clipType: "pcClip", solidTypes: { isWallL: false } } });
 					break;
 				case 32: // up
-					entitiesList[entitiesListIndex] = Crafty.e("ProjectileShooter")
-						.attr({ x: tileX, y: tileY });
-					entitiesList[entitiesListIndex].setProperties({ direction: "up" });
-					addPlayerClip(tileX, tileY, { isCeiling: false });
-					entitiesListIndex++;
+					addEntity({ x: tileX, y: tileY, entType: "ProjectileShooter", entProperties: { direction: "up" }, 
+						entClip: { clipType: "pcClip", solidTypes: { isCeiling: false } } });
 					break;
 				case 33: // down
-					entitiesList[entitiesListIndex] = Crafty.e("ProjectileShooter")
-						.attr({ x: tileX, y: tileY });
-					entitiesList[entitiesListIndex].setProperties({ direction: "down" });
-					addPlayerClip(tileX, tileY, { isFloor: false });
-					entitiesListIndex++;
+					addEntity({ x: tileX, y: tileY, entType: "ProjectileShooter", entProperties: { direction: "down" }, 
+						entClip: { clipType: "pcClip", solidTypes: { isFloor: false } } });
 					break;
 				case 34: // chase, left
-					entitiesList[entitiesListIndex] = Crafty.e("ProjectileShooter")
-						.attr({ x: tileX, y: tileY });
-					entitiesList[entitiesListIndex].setProperties({ direction: "left", projectileType: "chase" });
-					addPlayerClip(tileX, tileY, { isWallR: false });
-					entitiesListIndex++;
+					addEntity({ x: tileX, y: tileY, entType: "ProjectileShooter", entProperties: { direction: "left", projectileType: "chase" },
+						entClip: { clipType: "pcClip", solidTypes: { isWallR: false } } });
 					break;
 				case 35: // chase, right
-					entitiesList[entitiesListIndex] = Crafty.e("ProjectileShooter")
-						.attr({ x: tileX, y: tileY });
-					entitiesList[entitiesListIndex].setProperties({ direction: "right", projectileType: "chase" });
-					addPlayerClip(tileX, tileY, { isWallL: false });
-					entitiesListIndex++;
+					addEntity({ x: tileX, y: tileY, entType: "ProjectileShooter", entProperties: { direction: "right", projectileType: "chase" },
+						entClip: { clipType: "pcClip", solidTypes: { isWallL: false } } });
 					break;
 				case 36: // chase, up
-					entitiesList[entitiesListIndex] = Crafty.e("ProjectileShooter")
-						.attr({ x: tileX, y: tileY });
-					entitiesList[entitiesListIndex].setProperties({ direction: "up", projectileType: "chase" });
-					addPlayerClip(tileX, tileY, { isCeiling: false });
-					entitiesListIndex++;
+					addEntity({ x: tileX, y: tileY, entType: "ProjectileShooter", entProperties: { direction: "up", projectileType: "chase" },
+						entClip: { clipType: "pcClip", solidTypes: { isCeiling: false } } });
 					break;
 				case 37: // chase, down
-					entitiesList[entitiesListIndex] = Crafty.e("ProjectileShooter")
-						.attr({ x: tileX, y: tileY });
-					entitiesList[entitiesListIndex].setProperties({ direction: "down", projectileType: "chase" });
-					addPlayerClip(tileX, tileY, { isFloor: false });
-					entitiesListIndex++;
+					addEntity({ x: tileX, y: tileY, entType: "ProjectileShooter", entProperties: { direction: "down", projectileType: "chase" },
+						entClip: { clipType: "pcClip", solidTypes: { isFloor: false } } });
 					break;
 				// ------ SpikeBallLauncher_01 ------ //
 				case 40: // roll, left
-					entitiesList[entitiesListIndex] = Crafty.e("Spike_Ball_Launcher_01")
-						.attr({ x: tileX, y: tileY });
-					entitiesList[entitiesListIndex].setProperties({ direction: "left", collType: "roll", postImpactVel: { x: -200, y: 0 } });
-					addPlayerClip(tileX, tileY, { isFloor: false, w: entitiesList[entitiesListIndex].w, h: entitiesList[entitiesListIndex].h });
-					entitiesListIndex++;
+					addEntity({ x: tileX, y: tileY, entType: "Spike_Ball_Launcher_01", entProperties: { direction: "left", collType: "roll", postImpactVel: { x: -200, y: 0 },
+						entClip: { clipType: "pcClip", solidTypes: { isFloor: false } } } });
 					break;
 				case 41: // roll, right
-					entitiesList[entitiesListIndex] = Crafty.e("Spike_Ball_Launcher_01")
-						.attr({ x: tileX, y: tileY });
-					entitiesList[entitiesListIndex].setProperties({ direction: "right", collType: "roll", postImpactVel: { x: 200, y: 0 } });
-					addPlayerClip(tileX, tileY, { isFloor: false, w: entitiesList[entitiesListIndex].w, h: entitiesList[entitiesListIndex].h });
-					entitiesListIndex++;
+					addEntity({ x: tileX, y: tileY, entType: "Spike_Ball_Launcher_01", entProperties: { direction: "right", collType: "roll", postImpactVel: { x: 200, y: 0 },
+						entClip: { clipType: "pcClip", solidTypes: { isFloor: false } } } });
 					break;
 				// ------ Crusher_01 ------ //
 				case 42: // crushing left
-					entitiesList[entitiesListIndex] = Crafty.e("Crusher_01")
-						.attr({ x: tileX, y: tileY });
-					entitiesList[entitiesListIndex].setProperties({ direction: "left" });
-					entitiesListIndex++;
+					addEntity({ x: tileX, y: tileY, entType: "Crusher_01", entProperties: { direction: "left" } });
 					break;
 				case 43: // crushing right
-					entitiesList[entitiesListIndex] = Crafty.e("Crusher_01")
-						.attr({ x: tileX, y: tileY });
-					entitiesList[entitiesListIndex].setProperties({ direction: "right" });
-					entitiesListIndex++;
+					addEntity({ x: tileX, y: tileY, entType: "Crusher_01", entProperties: { direction: "right" } });
 					break;
 				case 44: // crushing up
-					entitiesList[entitiesListIndex] = Crafty.e("Crusher_01")
-						.attr({ x: tileX, y: tileY });
-					entitiesList[entitiesListIndex].setProperties({ direction: "up" });
-					entitiesListIndex++;
+					addEntity({ x: tileX, y: tileY, entType: "Crusher_01", entProperties: { direction: "up" } });
 					break;
 				case 45: // crushing down
-					entitiesList[entitiesListIndex] = Crafty.e("Crusher_01")
-						.attr({ x: tileX, y: tileY });
-					entitiesList[entitiesListIndex].setProperties({ direction: "down" });
-					entitiesListIndex++;
+					addEntity({ x: tileX, y: tileY, entType: "Crusher_01", entProperties: { direction: "down" } });
 					break;
 				default:
 					console.log("Could not find case for number: " + maps[levelNum][yPosIndex][xPosIndex])
@@ -291,55 +223,82 @@ function addSolidBlock(xIn, yIn) {
 	solidBlockListIndex++;
 };
 
-function addClip(xIn, yIn, settingsIn) {
+function addEntity(args) {
+	entitiesList[entitiesListIndex] = Crafty.e(args.entType);
+	entitiesList[entitiesListIndex].attr({ x: args.x, y: args.y });
+	if (args.w) {
+		entitiesList[entitiesListIndex].w = args.w;
+	}
+	if (args.h) {
+		entitiesList[entitiesListIndex].h = args.h;
+	}
+	if (args.hasResetPos) {
+		entitiesList[entitiesListIndex].resetPosCoords = { x: args.x, y: args.y };
+	}
+	if (args.entProperties) {
+		entitiesList[entitiesListIndex].setProperties(args.entProperties);
+	}
+	if (args.entClip) {
+		if (args.entClip.clipType == "pcClip") {
+			addPlayerClip(args.x, args.y, entitiesList[entitiesListIndex].w, entitiesList[entitiesListIndex].h, args.entClip.solidTypes );
+		} else if (args.entClip.clipType == "hazardClip") {
+			addHazardClip(args.x, args.y, entitiesList[entitiesListIndex].w, entitiesList[entitiesListIndex].h, args.entClip.solidTypes );
+		} else if (args.entClip.clipType == "clip") {
+			addClip(args.x, args.y, entitiesList[entitiesListIndex].w, entitiesList[entitiesListIndex].h, args.entClip.solidTypes );
+		}
+	}
+	entitiesListIndex++;
+};
+
+function addClip(xIn, yIn, wIn, hIn, settingsIn) {
 	clipList[clipListIndex] = Crafty.e("ClipBlock")
-		.attr({ x: xIn, y: yIn, w: tileSize.w+1, h: tileSize.h+1 });
-	if (settingsIn.isCeiling == false) {
-		clipList[clipListIndex].isCeiling = false;
-	} else if (settingsIn.isFloor == false) {
-		clipList[clipListIndex].isFloor = false;
-	} else if (settingsIn.isWallL == false) {
-		clipList[clipListIndex].isWallL = false;
-	} else if (settingsIn.isWallR == false) {
-		clipList[clipListIndex].isWallR = false;
+		.attr({ x: xIn, y: yIn, w: wIn, h: hIn });
+	if (settingsIn.isCeiling) {
+		clipList[clipListIndex].isCeiling = settingsIn.isCeiling;
+	} else if (settingsIn.isFloor) {
+		clipList[clipListIndex].isFloor = settingsIn.isFloor;
+	} else if (settingsIn.isWallL) {
+		clipList[clipListIndex].isWallL = settingsIn.isWallL;
+	} else if (settingsIn.isWallR) {
+		clipList[clipListIndex].isWallR = settingsIn.isWallR;
 	}
 	clipListIndex++;
 };
 
-function addPlayerClip(xIn, yIn, settingsIn) {
-	clipList[clipListIndex] = Crafty.e("ClipBlock_Player")
-		.attr({ x: xIn, y: yIn, w: tileSize.w+1, h: tileSize.h+1 });
-	if (settingsIn.isCeiling == false) {
-		clipList[clipListIndex].isCeiling = false;
-	} else if (settingsIn.isFloor == false) {
-		clipList[clipListIndex].isFloor = false;
-	} else if (settingsIn.isWallL == false) {
-		clipList[clipListIndex].isWallL = false;
-	} else if (settingsIn.isWallR == false) {
-		clipList[clipListIndex].isWallR = false;
+function addPlayerClip(xIn, yIn, wIn, hIn, settingsIn) {
+	pcClipList[pcClipListIndex] = Crafty.e("ClipBlock_Player")
+		.attr({ x: xIn, y: yIn, w: wIn, h: hIn });
+	if (settingsIn.isCeiling) {
+		pcClipList[pcClipListIndex].isCeiling = settingsIn.isCeiling;
+	} else if (settingsIn.isFloor) {
+		pcClipList[pcClipListIndex].isFloor = settingsIn.isFloor;
+	} else if (settingsIn.isWallL) {
+		pcClipList[pcClipListIndex].isWallL = settingsIn.isWallL;
+	} else if (settingsIn.isWallR) {
+		pcClipList[pcClipListIndex].isWallR = settingsIn.isWallR;
 	}
 	if (settingsIn.w) {
-		clipList[clipListIndex].w = settingsIn.w;
+		pcClipList[pcClipListIndex].w = settingsIn.w;
 	}
 	if (settingsIn.h) {
-		clipList[clipListIndex].h = settingsIn.h;
+		pcClipList[pcClipListIndex].h = settingsIn.h;
 	}
-	clipListIndex++;
+	pcClipListIndex++;
 };
 
-function addHazardClip(xIn, yIn, settingsIn) {
-	clipList[clipListIndex] = Crafty.e("ClipBlock_Hazard")
-		.attr({ x: xIn, y: yIn, w: tileSize.w+1, h: tileSize.h+1 });
-	if (settingsIn.isCeiling == false) {
-		clipList[clipListIndex].isCeiling = false;
-	} else if (settingsIn.isFloor == false) {
-		clipList[clipListIndex].isFloor = false;
-	} else if (settingsIn.isWallL == false) {
-		clipList[clipListIndex].isWallL = false;
-	} else if (settingsIn.isWallR == false) {
-		clipList[clipListIndex].isWallR = false;
+function addHazardClip(xIn, yIn, wIn, hIn, settingsIn) {
+	hazardClipList[hazardClipListIndex] = Crafty.e("ClipBlock_Hazard")
+		.attr({ x: xIn, y: yIn, w: wIn, h: hIn });
+	if (settingsIn.isCeiling) {
+		hazardClipList[hazardClipListIndex].isCeiling = settingsIn.isCeiling;
+	} else if (settingsIn.isFloor) {
+		hazardClipList[hazardClipListIndex].isFloor = settingsIn.isFloor;
+	} else if (settingsIn.isWallL) {
+		hazardClipList[hazardClipListIndex].isWallL = settingsIn.isWallL;
+	} else if (settingsIn.isWallR) {
+		hazardClipList[hazardClipListIndex].isWallR = settingsIn.isWallR;
 	}
-	clipListIndex++;
+	hazardClipListIndex++;
 };
 
 // -------------------- Solids_Collision_Booleans -------------------- //
@@ -635,6 +594,21 @@ function destroyLevel() {
 	entitiesList = null;
 	entitiesList = [];
 	entitiesListIndex = 0;
+
+	// clips
+	clipList = null;
+	clipList = [];
+	clipListIndex = 0;
+
+	// hazardClips
+	hazardClipList = null;
+	hazardClipList = [];
+	hazardClipListIndex = 0;
+
+	// pcClips
+	pcClipList = null;
+	pcClipList = [];
+	pcClipListIndex = 0;
 };
 
 function advanceLevel() {

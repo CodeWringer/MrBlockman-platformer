@@ -13,11 +13,14 @@ Crafty.c("collisionDetection", {
 	init: function() {
 		this.lastCollObj = "floor";
 		this.broadphasebox = {x: 0, y: 0, w: 0, h: 0 };
+	},
 
-		this.bind("EnterFrame", function(frameData) {
-			// ------------ Collision_Detection ------------ //
-			// ---- solidBlocks ---- //
-			this.updateBroadphasebox(this.milliDT);
+	checkCollisions: function(args) {
+		// ------------ Collision_Detection ------------ //
+		this.updateBroadphasebox(this.milliDT);
+
+		// ---- solidBlocks ---- //
+		if (args.checkSolids == true) {
 			for (var i = solidBlockList.length-1; i > -1; --i) {
 				var tile = solidBlockList[i];
 				if (tile.x+tile.w > this.broadphasebox.x && tile.x < this.broadphasebox.x+this.broadphasebox.w) {
@@ -26,7 +29,9 @@ Crafty.c("collisionDetection", {
 					}
 				}
 			}
-			// ---- ramps ---- //
+		}
+		// ---- ramps ---- //
+		if (args.checkRamps == true) {
 			for (var i = solidRampList.length-1; i > -1; --i) {
 				var rampTile = solidRampList[i];
 				if (rampTile.x+rampTile.w > this.broadphasebox.x && rampTile.x < this.broadphasebox.x+this.broadphasebox.w) {
@@ -35,7 +40,9 @@ Crafty.c("collisionDetection", {
 					}
 				}
 			}
-			// ---- clips ---- //
+		}
+		// ---- clips ---- //
+		if (args.checkClips == true) {
 			for (var i = clipList.length-1; i > -1; --i) {
 				var clipTile = clipList[i];
 				if (clipTile.x+clipTile.w > this.broadphasebox.x && clipTile.x < this.broadphasebox.x+this.broadphasebox.w) {
@@ -44,7 +51,29 @@ Crafty.c("collisionDetection", {
 					}
 				}
 			}
-		});	
+		}
+		// ---- pcClips ---- //
+		if (args.checkPCclips == true) {
+			for (var i = pcClipList.length-1; i > -1; --i) {
+				var pcClipTile = pcClipList[i];
+				if (pcClipTile.x+pcClipTile.w > this.broadphasebox.x && pcClipTile.x < this.broadphasebox.x+this.broadphasebox.w) {
+					if (pcClipTile.y+pcClipTile.h > this.broadphasebox.y && pcClipTile.y < this.broadphasebox.y+this.broadphasebox.h) {
+						this.checkCollisionSweptAABB(pcClipTile, this.milliDT);
+					}
+				}
+			}
+		}
+		// ---- hazardClips ---- //
+		if (args.checkHazardClips == true) {
+			for (var i = hazardClipList.length-1; i > -1; --i) {
+				var hazardClipTile = hazardClipList[i];
+				if (hazardClipTile.x+hazardClipTile.w > this.broadphasebox.x && hazardClipTile.x < this.broadphasebox.x+this.broadphasebox.w) {
+					if (hazardClipTile.y+hazardClipTile.h > this.broadphasebox.y && hazardClipTile.y < this.broadphasebox.y+this.broadphasebox.h) {
+						this.checkCollisionSweptAABB(hazardClipTile, this.milliDT);
+					}
+				}
+			}
+		}
 	},
 
 	updateBroadphasebox: function(milliDT) {
@@ -818,6 +847,9 @@ Crafty.c("PC", {
 				this.idleTime = 0;
 			}
 
+			// ---- Collision_Detection ---- //
+			this.checkCollisions({ checkSolids: true, checkRamps: true, checkClips: true, checkPCclips: true, checkHazardClips: false });
+
 			// ------ Update_Hitbox ------ //
 			this.hitBox_down.x = (this.x + 2) + this.curVel.x * this.milliDT;
 			this.hitBox_down.y = (this.y + this.h) + this.curVel.y * this.milliDT;
@@ -1319,6 +1351,9 @@ Crafty.c("Spike_Ball_01", {
 				}
 			}
 
+			// ---- Collision_Detection ---- //
+			this.checkCollisions({ checkSolids: true, checkRamps: true, checkClips: true, checkPCclips: false, checkHazardClips: true });
+
 			// Apply velocities
 			this.x += (this.curVel.x * worldScale) * this.milliDT;
 			this.y += (this.curVel.y * worldScale) * this.milliDT;
@@ -1573,7 +1608,6 @@ Crafty.c("Spike_Ball_Launcher_01", {
 			this.milliDT = (frameData.dt/1000);
 
 			this.shootDelayTime += 1000 * this.milliDT;
-			console.log(this.shootDelay);
 			if (this.shootDelayTime >= this.shootDelay) {
 				this.shootProjectile();
 				this.shootDelayTime = 0;
@@ -2054,6 +2088,9 @@ Crafty.c("Projectile", {
 				this.die();
 			}
 
+			// ---- Collision_Detection ---- //
+			this.checkCollisions({ checkSolids: true, checkRamps: true, checkClips: true, checkPCclips: false, checkHazardClips: true });
+
 			// Apply velocities
 			this.x += (this.curVel.x * worldScale) * this.milliDT;
 			this.y += (this.curVel.y * worldScale) * this.milliDT;
@@ -2202,6 +2239,9 @@ Crafty.c("chaserProjectile_01", {
 			// Update curVel
 			this.curVel.x = this.nextRotPoint.x - (this.x + this.w/2);
 			this.curVel.y = this.nextRotPoint.y - (this.y + this.h/2);
+
+			// ---- Collision_Detection ---- //
+			this.checkCollisions({ checkSolids: true, checkRamps: true, checkClips: true, checkPCclips: false, checkHazardClips: true });
 
 			// Apply velocity
 			this.x += this.curVel.x * this.milliDT;
