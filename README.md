@@ -1,4 +1,4 @@
 MrBlockman-platformer
 =====================
 
-Simple platformer game made for learning purposes
+A 2D platformer game made for learning purposes. 

@@ -1,16 +1,71 @@
 <html>
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-  <title>Mr. Blockman's adventure</title>
+  <title>Mr. Blockman's Adventure</title>
 
+  <!-- Library -->
   <script src="lib/crafty.js"></script>
+
+  <!-- Core -->
   <script src="src/game.js"></script>
-  <script src="src/components.js"></script>
-  <script src="src/collDetCompo.js"></script>
-  <script src="src/helperMaths.js"></script>
-  <script src="src/scenes.js"></script>
+
+  <!-- Level -->
+  <script src="src/entity/LevelBuilder.js"></script>
   <script src="src/levels.js"></script>
-  <script src="src/levelbuilder.js"></script>
+
+  <!-- Utility -->
+  <script src="src/utility/Maths.js"></script>
+
+  <!-- Interface -->
+  <script src="src/interface/IBase.js"></script>
+  <script src="src/interface/IReelManager.js"></script>
+  <script src="src/interface/IBlock.js"></script>
+  <script src="src/interface/IClip.js"></script>
+  <script src="src/interface/IMortal.js"></script>
+  <script src="src/interface/IOffset.js"></script>
+  <script src="src/interface/IRamp.js"></script>
+  <script src="src/interface/IReset.js"></script>
+  <script src="src/interface/ICollisionDetection.js"></script>
+  <script src="src/interface/IProjectile.js"></script>
+  <script src="src/interface/IDebug.js"></script>
+
+  <!-- Sprite -->
+  <script src="src/entity/sprite/SpritePlayer.js"></script>
+  <script src="src/entity/sprite/SpritePlayerSleep.js"></script>
+  <script src="src/entity/sprite/SpriteSpikeBall_01.js"></script>
+  <script src="src/entity/sprite/SpriteSpikeBall_02.js"></script>
+  <script src="src/entity/sprite/SpriteSpikeBallChain_02.js"></script>
+  <script src="src/entity/sprite/SpriteSpikeBallOrigin_02.js"></script>
+  <script src="src/entity/sprite/SpriteChaserProjectile_01.js"></script>
+  <script src="src/entity/sprite/SpriteProjectileShooter.js"></script>
+
+  <!-- Entity -->
+  <script src="src/entity/Block.js"></script>
+  <script src="src/entity/Ramp.js"></script>
+  <script src="src/entity/Trim.js"></script>
+  <script src="src/entity/BlockLava.js"></script>
+  <script src="src/entity/Checkpoint.js"></script>
+  <script src="src/entity/EmitSettings.js"></script>
+  <script src="src/entity/GameText.js"></script>
+  <script src="src/entity/LevelExit.js"></script>
+  <script src="src/entity/Particle.js"></script>
+  <script src="src/entity/ParticleEmitter.js"></script>
+  <script src="src/entity/Player.js"></script>
+  <script src="src/entity/SpikeBall_01.js"></script>
+  <script src="src/entity/LauncherSpikeBall.js"></script>
+  <script src="src/entity/SpikeBall.js"></script>
+  <script src="src/entity/JumpPad.js"></script>
+  <script src="src/entity/SpikeBall_02.js"></script>
+  <script src="src/entity/SpikeBallHitBox_02.js"></script>
+  <script src="src/entity/SpikeBallChainAnchor_02.js"></script>
+  <script src="src/entity/ProjectileShooter.js"></script>
+  <script src="src/entity/Projectile.js"></script>
+  <script src="src/entity/ProjectileChaser.js"></script>
+
+  <!-- Scene -->
+  <script src="src/scene/Loading.js"></script>
+  <script src="src/scene/Game.js"></script>
+
   <script>
   window.addEventListener("load", Game.start);
   </script>
