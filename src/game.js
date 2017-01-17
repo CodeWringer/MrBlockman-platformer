@@ -1,7 +1,4 @@
 /**
- * Author Nicolas Haase
- * 
- *
  * This code was written on the basis of Crafty, a game engine by Louis Stowasser.
  * The author of this file is not responsible for or involved in the development of the Crafty game engine.
  */

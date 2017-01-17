@@ -1,61 +1,79 @@
-/*
-* Base component for clips. 
-*/
-Crafty.c("IClip", 
-{
-    init: function() 
-    {
-        this.requires("IBase, IBlock");
-        this.setScale(90, 90);
+// Include namespaces. 
+var interfaces = interfaces || {}; 
+interfaces.IClip = interfaces.IClip || {};
 
-        // this.isFloor = true;
-        // this.isCeiling = true;
-        // this.isWallL = true;
-        // this.isWallR = true;
-        // this.isValid = true;
-    },
-});
-
-/*
-* Defines a clip, to block all objects from passing through. 
+/**
+* @namespace
+* @desc Base component for clips. 
 */
-Crafty.c("IClipAll", 
+interfaces.IClip.IClip = function() 
 {
-    init: function() 
+    Crafty.c("IClip", 
     {
-        this.requires("IClip");
-    },
-});
+        init: function() 
+        {
+            this.requires("IBase, IBlock");
+            this.setScale(90, 90);
+        },
+    });
+}();
 
-/*
-* Defines a clip, to block the player from passing through. 
+/**
+* @namespace
+* @desc Defines a clip, that blocks all objects. 
 */
-Crafty.c("IClipPlayer", 
+interfaces.IClip.IClipAll = function() 
 {
-    init: function() 
+    Crafty.c("IClipAll", 
     {
-        this.requires("IClip");
-    },
-});
+        init: function() 
+        {
+            this.requires("IClip");
+        },
+    });
+}();
+ 
+/**
+* @namespace
+* @desc Defines a clip, to block the player from passing through. 
+*/
+interfaces.IClip.IClipPlayer = function() 
+{
+    Crafty.c("IClipPlayer", 
+    {
+        init: function() 
+        {
+            this.requires("IClip");
+        },
+    });
+}();
 
-/*
-* Defines a clip, to block monsters/enemies from passing through. 
+/**
+* @namespace
+* @desc Defines a clip, to block monsters/enemies from passing through. 
 */
-Crafty.c("IClipMonster", 
+interfaces.IClip.IClipMonster = function() 
 {
-    init: function() 
+    Crafty.c("IClipMonster", 
     {
-        this.requires("IClip");
-    },
-});
+        init: function() 
+        {
+            this.requires("IClip");
+        },
+    });
+}();
 
-/*
-* Defines a clip, to block dynamic hazard objects from passing through. 
+/**
+* @namespace
+* @desc Defines a clip, to block dynamic hazard objects from passing through. 
 */
-Crafty.c("IClipHazard", 
+interfaces.IClip.IClipHazard = function() 
 {
-    init: function() 
+    Crafty.c("IClipHazard", 
     {
-        this.requires("IClip");
-    },
-});
+        init: function() 
+        {
+            this.requires("IClip");
+        },
+    });
+}();

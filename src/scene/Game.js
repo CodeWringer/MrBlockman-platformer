@@ -13,18 +13,12 @@ Crafty.defineScene("Game", function()
             Crafty("IDebug").each(function() {
                 this.showDebugDraw();
             });
-            // for (var i = oLevelBuilder.lIBlock.length - 1; i >= 0; i--) {
-            //     oLevelBuilder.lIBlock[i].showDebugDraw();
-            // };
         }
         else if (e.key == Crafty.keys.Z)
         {
             Crafty("IDebug").each(function() {
                 this.hideDebugDraw();
             });
-            // for (var i = oLevelBuilder.lIBlock.length - 1; i >= 0; i--) {
-            //     oLevelBuilder.lIBlock[i].hideDebugDraw();
-            // };
         }
     });
 
